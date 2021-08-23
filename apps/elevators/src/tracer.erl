@@ -31,26 +31,26 @@ init([]) ->
 %%  Prints info on the event that has occured.
 %%  To be implemented...
 %%----------------------------------------------------------------------
-handle_event(Event, []) ->
+handle_event(_Event, []) ->
     {ok, []}.
 
 %%----------------------------------------------------------------------
 %% handle_call not used
 %%----------------------------------------------------------------------
-handle_call(Request, State) ->
+handle_call(_Request, State) ->
     Reply = ok,
     {ok, Reply, State}.
 
 %%----------------------------------------------------------------------
 %% handle_info not used
 %%----------------------------------------------------------------------
-handle_info(Info, State) ->
+handle_info(_Info, State) ->
     {ok, State}.
 
 %%----------------------------------------------------------------------
 %% terminate has nothing to clean up.
 %%----------------------------------------------------------------------
-terminate(Reason, State) ->
+terminate(_Reason, _State) ->
     ok.
 
 %%----------------------------------------------------------------------

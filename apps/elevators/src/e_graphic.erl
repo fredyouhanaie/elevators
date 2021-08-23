@@ -122,27 +122,27 @@ stopping({step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
 %%----------------------------------------------------------------------
 %% Only all state event is to update the control process pid.
 %%----------------------------------------------------------------------
-handle_event({epid, EPid}, State, {Pos, ElevG, OldPid, Dir, Floors}) ->
+handle_event({epid, EPid}, State, {Pos, ElevG, _OldPid, Dir, Floors}) ->
     elevator:reset(EPid, State, get_floor(Pos, Dir, Floors)),
     {next_state, State, {Pos, ElevG, EPid, Dir, Floors}}.
 
 %%----------------------------------------------------------------------
 %% No sync events defined.
 %%----------------------------------------------------------------------
-handle_sync_event(Event, From, StateName, StateData) ->
+handle_sync_event(_Event, _From, StateName, StateData) ->
     Reply = ok,
     {reply, Reply, StateName, StateData}.
 
 %%----------------------------------------------------------------------
 %% No info expected.
 %%----------------------------------------------------------------------
-handle_info(Info, StateName, StateData) ->
+handle_info(_Info, StateName, StateData) ->
     {next_state, StateName, StateData}.
 
 %%----------------------------------------------------------------------
 %% terminate has nothing to clean up.
 %%----------------------------------------------------------------------
-terminate(Reason, StateName, StatData) ->
+terminate(_Reason, _StateName, _StatData) ->
     ok.
 
 %%----------------------------------------------------------------------
@@ -242,7 +242,7 @@ get_floor(Pos, up, Floors) ->
 get_floor(Pos, down, Floors) ->
     find(-1, Pos, Floors, infinity, none).
 
-find(Sign, Pos, [], Min, MinFloor) ->
+find(_Sign, _Pos, [], _Min, MinFloor) ->
     MinFloor;
 find(Sign, Pos, [{_F, Y} | Floors], Min, MinF) when Sign * (Y - Pos) < 0 ->
     find(Sign, Pos, Floors, Min, MinF);

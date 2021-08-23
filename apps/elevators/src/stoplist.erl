@@ -29,5 +29,5 @@ add(Floor, LastFloor, [Other | Rest]) ->
 %%  number which can be used to select the best elevator to choose to go to
 %%  a floor.
 %%----------------------------------------------------------------------
-time_to(ToFloor, FromFloor, StopList) ->
+time_to(_ToFloor, _FromFloor, StopList) ->
     length(StopList).

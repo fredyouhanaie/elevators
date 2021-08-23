@@ -165,7 +165,7 @@ handle_cast({closed, ENo, Floor}, Elevs) ->
 				       Elev#sched_elevator{state = closed})};
 	{value, Elev} ->
 	    #sched_elevator{pid = EPid, state = open,
-			    stoplist = [NextFloor | Rest]} = Elev,
+			    stoplist = [NextFloor | _Rest]} = Elev,
 	    elevator:move(EPid, direction(Floor, NextFloor)),
 	    {noreply, lists:keyreplace(ENo, #sched_elevator.number, Elevs,
 				       Elev#sched_elevator{state = moving})}
@@ -335,7 +335,7 @@ check_in_stoplist(Floor, Elevs) ->
 %% Find the best elevator and schedule it to go there.
 %%
 add_to_a_stoplist(Floor, Elevs) ->
-    [{_Time, Selected} | Rest] =
+    [{_Time, Selected} | _Rest] =
 	lists:sort(
 	  lists:map(fun (Elev) ->
 			    {stoplist:time_to(Floor,

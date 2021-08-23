@@ -59,12 +59,12 @@ stop() ->
 %%----------------------------------------------------------------------
 top_proc(IFloor, NFloors, NElevs, Handlers) ->
     register(top_proc, self()),
-    {ok, SPid} = scheduler:start_link(),
+    {ok, _SPid} = scheduler:start_link(),
     sys_event:start_link([{display, [IFloor, NFloors, NElevs]}] ++ Handlers),
-    EPids = lists:foreach(fun (ENo) ->
-				  {ok, EPid} = elevator:start_link(ENo)
-			  end,
-			  lists:seq(1, NElevs)),
+    _EPids = lists:foreach(fun (ENo) ->
+                                   {ok, _EPid} = elevator:start_link(ENo)
+                           end,
+                           lists:seq(1, NElevs)),
     block().
 
 %%----------------------------------------------------------------------

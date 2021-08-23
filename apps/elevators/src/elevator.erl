@@ -148,11 +148,11 @@ moving({approaching, NewFloor}, {ENo, Floor}) ->
 	    sys_event:stopping(ENo),
 	    {next_state, stopping, {ENo, Floor}}
     end;
-moving({at_floor, NewFloor}, {ENo, Floor}) ->
+moving({at_floor, NewFloor}, {ENo, _Floor}) ->
     scheduler:passing(ENo, NewFloor),
     {next_state, moving, {ENo, NewFloor}}.
 
-stopping({at_floor, NewFloor}, {ENo, Floor}) ->
+stopping({at_floor, NewFloor}, {ENo, _Floor}) ->
     sys_event:stopped_at(ENo, NewFloor),
     sys_event:open(ENo),
     scheduler:open(ENo, NewFloor),
@@ -162,7 +162,7 @@ stopping({at_floor, NewFloor}, {ENo, Floor}) ->
 %%----------------------------------------------------------------------
 %% The get_state event.
 %%----------------------------------------------------------------------
-handle_sync_event(get_state, From, State, {ENo, Floor}) ->
+handle_sync_event(get_state, _From, State, {ENo, Floor}) ->
     {reply, {ENo, State, Floor}, State, {ENo, Floor}}.
 
 %%----------------------------------------------------------------------
@@ -186,5 +186,5 @@ code_change(_OldVsn, State, Data, _Extra) ->
 %%----------------------------------------------------------------------
 %% Cleanup.
 %%----------------------------------------------------------------------
-terminate(_Reason, _State, {ENo, _Floor}) ->
+terminate(_Reason, _State, {_ENo, _Floor}) ->
     ok.
