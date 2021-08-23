@@ -1,8 +1,8 @@
 %%%----------------------------------------------------------------------
 %%% File    : system_sup.erl
-%%% Author  : Håkan Huss <hakan@erlang.ericsson.se>
+%%% Author  : HÃ¥kan Huss <hakan@erlang.ericsson.se>
 %%% Purpose : Supervisor for the elevator system.
-%%% Created : 30 Aug 1999 by Håkan Huss <hakan@erlang.ericsson.se>
+%%% Created : 30 Aug 1999 by HÃ¥kan Huss <hakan@erlang.ericsson.se>
 %%%----------------------------------------------------------------------
 
 -module(system_sup).

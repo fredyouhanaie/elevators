@@ -1,8 +1,8 @@
 %%%----------------------------------------------------------------------
 %%% File    : elevator.erl
-%%% Author  : Håkan Huss <hakan@erlang.ericsson.se>
+%%% Author  : HÃ¥kan Huss <hakan@erlang.ericsson.se>
 %%% Purpose : Elevator interface functions for elevator exercise
-%%% Created :  3 Aug 1999 by Håkan Huss <hakan@erlang.ericsson.se>
+%%% Created :  3 Aug 1999 by HÃ¥kan Huss <hakan@erlang.ericsson.se>
 %%%----------------------------------------------------------------------
 
 -module(elevator).

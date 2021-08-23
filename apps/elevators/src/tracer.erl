@@ -1,8 +1,8 @@
 %%%----------------------------------------------------------------------
 %%% File    : tracer.erl
-%%% Author  : Håkan Huss <hakan@erlang.ericsson.se>
+%%% Author  : HÃ¥kan Huss <hakan@erlang.ericsson.se>
 %%% Purpose : Text-based event tracer that reports system events.
-%%% Created :  4 Aug 1999 by Håkan Huss <hakan@erlang.ericsson.se>
+%%% Created :  4 Aug 1999 by HÃ¥kan Huss <hakan@erlang.ericsson.se>
 %%%----------------------------------------------------------------------
 
 -module(tracer).

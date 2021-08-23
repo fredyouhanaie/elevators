@@ -1,8 +1,8 @@
 %%%----------------------------------------------------------------------
 %%% File    : sys_event.erl
-%%% Author  : Håkan Huss <hakan@erlang.ericsson.se>
+%%% Author  : HÃ¥kan Huss <hakan@erlang.ericsson.se>
 %%% Purpose : The system event manager.
-%%% Created :  3 Aug 1999 by Håkan Huss <hakan@erlang.ericsson.se>
+%%% Created :  3 Aug 1999 by HÃ¥kan Huss <hakan@erlang.ericsson.se>
 %%%----------------------------------------------------------------------
 
 -module(sys_event).

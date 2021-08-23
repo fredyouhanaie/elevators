@@ -1,9 +1,9 @@
 %%%----------------------------------------------------------------------
 %%% Copyright (c) 1999, Ericsson Utvecklings AB
 %%% File    : elev_sup.erl
-%%% Author  : Håkan Huss <haken@erlang.ericsson.se>
+%%% Author  : HÃ¥kan Huss <haken@erlang.ericsson.se>
 %%% Purpose : Elevator process supervisor.
-%%% Created : 28 Aug 1999 by Håkan Huss <haken@erlang.ericsson.se>
+%%% Created : 28 Aug 1999 by HÃ¥kan Huss <haken@erlang.ericsson.se>
 %%%----------------------------------------------------------------------
 
 -module(elev_sup).

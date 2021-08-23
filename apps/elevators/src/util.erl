@@ -1,7 +1,7 @@
 %%% File    : util.erl
-%%% Author  : Håkan Huss <hakan@erlang.ericsson.se>
+%%% Author  : HÃ¥kan Huss <hakan@erlang.ericsson.se>
 %%% Purpose : Start functions for the elevator system.
-%%% Created :  1 Sep 1999 by Håkan Huss <hakan@erlang.ericsson.se>
+%%% Created :  1 Sep 1999 by HÃ¥kan Huss <hakan@erlang.ericsson.se>
 
 -module(util).
 -author('hakan@erlang.ericsson.se').
