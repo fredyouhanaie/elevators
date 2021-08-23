@@ -1,6 +1,5 @@
 PROJECT = elevators
-REBAR = rebar
-REBARUP = rebar -C rebar.config.upgrade
+REBAR = rebar3
 
 all: rel1
 
