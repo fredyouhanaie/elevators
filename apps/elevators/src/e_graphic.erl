@@ -9,7 +9,11 @@
 -author('hakan@erlang.ericsson.se').
 -vsn("1.0").
 
+-ifdef(USE_GEN_FSM).
 -behaviour(gen_fsm).
+-else.
+-behaviour(gen_statem).
+-endif.
 
 %% External exports
 -export([start_link/3]).
@@ -17,8 +21,14 @@
 -export([get_floor/3]).
 
 %% gen_fsm callbacks
+-ifdef(USE_GEN_FSM).
 -export([init/1, open/2, closed/2, moving/2, stopping/2, handle_event/3,
 	 handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
+-else.
+-export([callback_mode/0]).
+-export([init/1, open/3, closed/3, moving/3, stopping/3]).
+-export([terminate/3, code_change/4]).
+-endif.
 
 %%%----------------------------------------------------------------------
 %%% 
@@ -60,23 +70,53 @@
 %%%----------------------------------------------------------------------
 %%% API
 %%%----------------------------------------------------------------------
+-ifdef(USE_GEN_FSM).
 start_link(Pos, ElevG, Floors) ->
     gen_fsm:start_link(e_graphic, [Pos, ElevG, Floors], []).
+-else.
+start_link(Pos, ElevG, Floors) ->
+    gen_statem:start_link(e_graphic, [Pos, ElevG, Floors], []).
+-endif.
 
+-ifdef(USE_GEN_FSM).
 open(Elev) ->
     gen_fsm:send_event(Elev, open).
+-else.
+open(Elev) ->
+    gen_statem:cast(Elev, open).
+-endif.
 
+-ifdef(USE_GEN_FSM).
 close(Elev) ->
     gen_fsm:send_event(Elev, close).
+-else.
+close(Elev) ->
+    gen_statem:cast(Elev, close).
+-endif.
 
+-ifdef(USE_GEN_FSM).
 stop(Elev) ->
     gen_fsm:send_event(Elev, stop).
+-else.
+stop(Elev) ->
+    gen_statem:cast(Elev, stop).
+-endif.
 
+-ifdef(USE_GEN_FSM).
 move(Elev, Dir) ->
     gen_fsm:send_event(Elev, {move, Dir}).
+-else.
+move(Elev, Dir) ->
+    gen_statem:cast(Elev, {move, Dir}).
+-endif.
 
+-ifdef(USE_GEN_FSM).
 set_controller(Elev, EPid) ->
     gen_fsm:send_all_state_event(Elev, {epid, EPid}).
+-else.
+set_controller(Elev, EPid) ->
+    gen_statem:call(Elev, {epid, EPid}).
+-endif.
 
 %%%----------------------------------------------------------------------
 %%% Callback functions from gen_fsm
@@ -85,17 +125,39 @@ set_controller(Elev, EPid) ->
 init([Pos, ElevG, Floors]) ->
     {ok, closed, {Pos, ElevG, nopid, nodir, Floors}}.
 
+-ifdef(USE_GEN_FSM).
+-else.
+callback_mode() ->
+    state_functions.
+-endif.
+
+-ifdef(USE_GEN_FSM).
 open(close, {Pos, ElevG, EPid, nodir, Floors}) ->
     gs:config(ElevG, {fill, black}),
     {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}.
+-else.
+open(cast, close, {Pos, ElevG, EPid, nodir, Floors}) ->
+    gs:config(ElevG, {fill, black}),
+    {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}.
+-endif.
 
+-ifdef(USE_GEN_FSM).
 closed(open, {Pos, ElevG, EPid, nodir, Floors}) ->
     gs:config(ElevG, {fill, cyan}),
     {next_state, open, {Pos, ElevG, EPid, nodir, Floors}};
 closed({move, Dir}, {Pos, ElevG, EPid, nodir, Floors}) ->
     gen_fsm:send_event(self(), {step, Dir}),
     {next_state, moving, {Pos, ElevG, EPid, Dir, Floors}}.
+-else.
+closed(cast, open, {Pos, ElevG, EPid, nodir, Floors}) ->
+    gs:config(ElevG, {fill, cyan}),
+    {next_state, open, {Pos, ElevG, EPid, nodir, Floors}};
+closed(cast, {move, Dir}, {Pos, ElevG, EPid, nodir, Floors}) ->
+    gen_statem:cast(self(), {step, Dir}),
+    {next_state, moving, {Pos, ElevG, EPid, Dir, Floors}}.
+-endif.
 
+-ifdef(USE_GEN_FSM).
 moving({step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
     Dy = dy(Dir),
     NewPos = Pos + Dy,
@@ -105,7 +167,19 @@ moving({step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
     {next_state, moving, {NewPos, ElevG, EPid, Dir, Floors}};
 moving(stop, {Pos, ElevG, EPid, Dir, Floors}) ->
     {next_state, stopping, {Pos, ElevG, EPid, Dir, Floors}}.
+-else.
+moving(cast, {step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
+    Dy = dy(Dir),
+    NewPos = Pos + Dy,
+    gs:config(ElevG, {move, {0, Dy}}),
+    check_position(NewPos, Dir, EPid, Floors),
+    timer:apply_after(200, gen_fsm, send_event, [self(), {step, Dir}]),
+    {next_state, moving, {NewPos, ElevG, EPid, Dir, Floors}};
+moving(cast, stop, {Pos, ElevG, EPid, Dir, Floors}) ->
+    {next_state, stopping, {Pos, ElevG, EPid, Dir, Floors}}.
+-endif.
 
+-ifdef(USE_GEN_FSM).
 stopping({step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
     case at_floor(Pos, Floors) of
 	false ->
@@ -118,26 +192,49 @@ stopping({step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
 	    elevator:at_floor(EPid, Floor),
 	    {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}
     end.
+-else.
+stopping(cast, {step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
+    case at_floor(Pos, Floors) of
+	false ->
+	    Dy = dy(Dir),
+	    NewPos = Pos + Dy,
+	    gs:config(ElevG, {move, {0, Dy}}),
+	    timer:apply_after(200, gen_fsm, send_event, [self(), {step, Dir}]),
+	    {next_state, stopping, {NewPos, ElevG, EPid, Dir, Floors}};
+	{true, Floor} ->
+	    elevator:at_floor(EPid, Floor),
+	    {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}
+    end.
+-endif.
 
 %%----------------------------------------------------------------------
 %% Only all state event is to update the control process pid.
 %%----------------------------------------------------------------------
+-ifdef(USE_GEN_FSM).
 handle_event({epid, EPid}, State, {Pos, ElevG, _OldPid, Dir, Floors}) ->
     elevator:reset(EPid, State, get_floor(Pos, Dir, Floors)),
     {next_state, State, {Pos, ElevG, EPid, Dir, Floors}}.
+-else.
+-endif.
 
 %%----------------------------------------------------------------------
 %% No sync events defined.
 %%----------------------------------------------------------------------
+-ifdef(USE_GEN_FSM).
 handle_sync_event(_Event, _From, StateName, StateData) ->
     Reply = ok,
     {reply, Reply, StateName, StateData}.
+-else.
+-endif.
 
 %%----------------------------------------------------------------------
 %% No info expected.
 %%----------------------------------------------------------------------
+-ifdef(USE_GEN_FSM).
 handle_info(_Info, StateName, StateData) ->
     {next_state, StateName, StateData}.
+-else.
+-endif.
 
 %%----------------------------------------------------------------------
 %% terminate has nothing to clean up.
