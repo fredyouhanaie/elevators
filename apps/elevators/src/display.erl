@@ -15,6 +15,12 @@
 -export([init/1, handle_event/2, handle_call/2, handle_info/2,
 	 terminate/2, code_change/3]).
 
+-ifdef(GS_MOCK).
+-define(GS, ?GS_MOCK).
+-else.
+-define(GS, gs).
+-endif.
+
 %%%----------------------------------------------------------------------
 %%% Callback functions from gen_event
 %%%----------------------------------------------------------------------
@@ -48,25 +54,25 @@ init([Floor, NFloors, NElevs]) ->
     WH = ?I+CH+?I+((NFloors + 1) div 2)*?EBH+?I+?BH+?I,  % Window height
     
     %% Create the actual window
-    Win = gs:create(window, gs:start(), [{title, "Elevators"},
-					 {x, 300}, {y, 100},
-					 {width, WW}, {height, WH}]),
+    Win = ?GS:create(window, ?GS:start(), [{title, "Elevators"},
+                                           {x, 300}, {y, 100},
+                                           {width, WW}, {height, WH}]),
 
     %% This frame holds the floor buttons
-    FButtonF = gs:create(frame, Win, [{x, ?I}, {y, ?I},
-				      {width, ?FBW}, {height, CH}]),
+    FButtonF = ?GS:create(frame, Win, [{x, ?I}, {y, ?I},
+                                       {width, ?FBW}, {height, CH}]),
     
     %% The canvas is used to draw the floors and elevators on
-    Canvas = gs:create(canvas, Win, [{x, 2*?I+?FBW}, {y, ?I},
-				     {width, CW}, {height, CH},
+    Canvas = ?GS:create(canvas, Win, [{x, 2*?I+?FBW}, {y, ?I},
+                                      {width, CW}, {height, CH},
 				      {bw, 2}, {relief, raised}]),
 
     Floors = draw_floors(NFloors, 0, Canvas, CW, FButtonF),
 
     %% This frame holds the elevator buttons
-    EButtonF = gs:create(frame, Win, [{x, 2*?I+?FBW}, {y, 2*?I+CH},
-				      {width, CW},
-				      {height, ((NFloors + 1) div 2)*?EBH}]),
+    EButtonF = ?GS:create(frame, Win, [{x, 2*?I+?FBW}, {y, 2*?I+CH},
+                                       {width, CW},
+                                       {height, ((NFloors + 1) div 2)*?EBH}]),
 
     %% Pos is to original position of the elevators (top)
     Pos = CH - Floor*(?EH+?F),
@@ -74,12 +80,12 @@ init([Floor, NFloors, NElevs]) ->
     ElevGs = draw_elevators(1, NElevs, NFloors, ?F, Pos, Canvas, CH, EButtonF),
 
     %% A quit button completes the window
-    _Quit = gs:create(button, Win, [{x, WW/2-?BW/2}, {y, WH-?I-?BH},
-                                    {width, ?BW}, {height, ?BH},
-                                    {label, {text, "Quit"}},
-                                    {data, quit}]),
+    _Quit = ?GS:create(button, Win, [{x, WW/2-?BW/2}, {y, WH-?I-?BH},
+                                     {width, ?BW}, {height, ?BH},
+                                     {label, {text, "Quit"}},
+                                     {data, quit}]),
     
-    gs:config(Win, {map, true}),
+    ?GS:config(Win, {map, true}),
     
     {ok, start_e_graphics(1, Pos, ElevGs, Floors, [])}.
 
@@ -185,16 +191,16 @@ draw_floors(F, Ybase, Canvas, CW, FButtonF) ->
     %% Compute where to draw the line and create it
     %% Ybase + floor height - half line width
     Yline = Ybase + (?EH+?F) - ?F/2,
-    gs:create(line, Canvas, [{coords, [{0,Yline}, {CW,Yline}]},
-			     {width, ?F}]),
+    ?GS:create(line, Canvas, [{coords, [{0,Yline}, {CW,Yline}]},
+                              {width, ?F}]),
 
     %% Compute where to place the button and create it
     %% Ybase + half floor height - half button height
     Ybutton = Ybase + (?EH+?F)/2 - ?FBH/2,
-    gs:create(button, FButtonF, [{x, 0}, {y, Ybutton},
-				 {width, ?FBW}, {height, ?FBH},
-				 {label, {text, "Come"}},
-				 {data, {floor, F}}]),
+    ?GS:create(button, FButtonF, [{x, 0}, {y, Ybutton},
+                                  {width, ?FBW}, {height, ?FBH},
+                                  {label, {text, "Come"}},
+                                  {data, {floor, F}}]),
 
     [{F, Ybase}|draw_floors(F-1, Ybase+(?EH+?F), Canvas, CW, FButtonF)].
 
@@ -216,10 +222,10 @@ draw_elevators(E, NElevs, _, _, _, _, _, _) when E > NElevs ->
 draw_elevators(E, N, NFloors, Xbase, Y, Canvas, CH, EButtonF) ->
 
     %% Draw the elevator
-    ElevGui = gs:create(rectangle, Canvas,
-                        [{coords,
-                          [{Xbase, Y}, {Xbase+?EW, Y+?EH}]},
-                         {fill, black}, {bw, 2}]),
+    ElevGui = ?GS:create(rectangle, Canvas,
+                         [{coords,
+                           [{Xbase, Y}, {Xbase+?EW, Y+?EH}]},
+                          {fill, black}, {bw, 2}]),
 
     %% Draw its buttons
     draw_buttons(1, E, NFloors, Xbase+?EW/2, 0, EButtonF),
@@ -242,17 +248,17 @@ draw_buttons(B, _E, NFloors, _X, _Y, _EButtonF) when B > NFloors ->
     done;
 draw_buttons(B, E, NFloors, X, Y, EButtonF) when B rem 2 /=0 ->
     %% Button with odd numbers are placed left of X
-    gs:create(button, EButtonF, [{x, X-?EBW}, {y, Y},
-				 {width, ?EBW}, {height, ?EBH},
-				 {label, {text, B}},
-				 {data, {elevator, E, B}}]),
+    ?GS:create(button, EButtonF, [{x, X-?EBW}, {y, Y},
+                                  {width, ?EBW}, {height, ?EBH},
+                                  {label, {text, B}},
+                                  {data, {elevator, E, B}}]),
     draw_buttons(B+1, E, NFloors, X, Y, EButtonF);
 draw_buttons(B, E, NFloors, X, Y, EButtonF) when B rem 2 ==0 ->
     %% Buttons with even numbers are placed right of X
-    gs:create(button, EButtonF, [{x, X}, {y, Y},
-				 {width, ?EBW}, {height, ?EBH},
-				 {label, {text, B}},
-				 {data, {elevator, E, B}}]),
+    ?GS:create(button, EButtonF, [{x, X}, {y, Y},
+                                  {width, ?EBW}, {height, ?EBH},
+                                  {label, {text, B}},
+                                  {data, {elevator, E, B}}]),
     %% Increase Y for next two buttons
     draw_buttons(B+1, E, NFloors, X, Y+?EBH, EButtonF).
 

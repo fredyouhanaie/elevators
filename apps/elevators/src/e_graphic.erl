@@ -15,6 +15,12 @@
 -behaviour(gen_statem).
 -endif.
 
+-ifdef(GS_MOCK).
+-define(GS, ?GS_MOCK).
+-else.
+-define(GS, gs).
+-endif.
+
 %% External exports
 -export([start_link/3]).
 -export([open/1, close/1, stop/1, move/2, set_controller/2]).
@@ -133,24 +139,24 @@ callback_mode() ->
 
 -ifdef(USE_GEN_FSM).
 open(close, {Pos, ElevG, EPid, nodir, Floors}) ->
-    gs:config(ElevG, {fill, black}),
+    ?GS:config(ElevG, {fill, black}),
     {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}.
 -else.
 open(cast, close, {Pos, ElevG, EPid, nodir, Floors}) ->
-    gs:config(ElevG, {fill, black}),
+    ?GS:config(ElevG, {fill, black}),
     {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}.
 -endif.
 
 -ifdef(USE_GEN_FSM).
 closed(open, {Pos, ElevG, EPid, nodir, Floors}) ->
-    gs:config(ElevG, {fill, cyan}),
+    ?GS:config(ElevG, {fill, cyan}),
     {next_state, open, {Pos, ElevG, EPid, nodir, Floors}};
 closed({move, Dir}, {Pos, ElevG, EPid, nodir, Floors}) ->
     gen_fsm:send_event(self(), {step, Dir}),
     {next_state, moving, {Pos, ElevG, EPid, Dir, Floors}}.
 -else.
 closed(cast, open, {Pos, ElevG, EPid, nodir, Floors}) ->
-    gs:config(ElevG, {fill, cyan}),
+    ?GS:config(ElevG, {fill, cyan}),
     {next_state, open, {Pos, ElevG, EPid, nodir, Floors}};
 closed(cast, {move, Dir}, {Pos, ElevG, EPid, nodir, Floors}) ->
     gen_statem:cast(self(), {step, Dir}),
@@ -161,7 +167,7 @@ closed(cast, {move, Dir}, {Pos, ElevG, EPid, nodir, Floors}) ->
 moving({step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
     Dy = dy(Dir),
     NewPos = Pos + Dy,
-    gs:config(ElevG, {move, {0, Dy}}),
+    ?GS:config(ElevG, {move, {0, Dy}}),
     check_position(NewPos, Dir, EPid, Floors),
     timer:apply_after(200, gen_fsm, send_event, [self(), {step, Dir}]),
     {next_state, moving, {NewPos, ElevG, EPid, Dir, Floors}};
@@ -171,7 +177,7 @@ moving(stop, {Pos, ElevG, EPid, Dir, Floors}) ->
 moving(cast, {step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
     Dy = dy(Dir),
     NewPos = Pos + Dy,
-    gs:config(ElevG, {move, {0, Dy}}),
+    ?GS:config(ElevG, {move, {0, Dy}}),
     check_position(NewPos, Dir, EPid, Floors),
     timer:apply_after(200, gen_fsm, send_event, [self(), {step, Dir}]),
     {next_state, moving, {NewPos, ElevG, EPid, Dir, Floors}};
@@ -185,7 +191,7 @@ stopping({step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
 	false ->
 	    Dy = dy(Dir),
 	    NewPos = Pos + Dy,
-	    gs:config(ElevG, {move, {0, Dy}}),
+	    ?GS:config(ElevG, {move, {0, Dy}}),
 	    timer:apply_after(200, gen_fsm, send_event, [self(), {step, Dir}]),
 	    {next_state, stopping, {NewPos, ElevG, EPid, Dir, Floors}};
 	{true, Floor} ->
@@ -198,7 +204,7 @@ stopping(cast, {step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
 	false ->
 	    Dy = dy(Dir),
 	    NewPos = Pos + Dy,
-	    gs:config(ElevG, {move, {0, Dy}}),
+	    ?GS:config(ElevG, {move, {0, Dy}}),
 	    timer:apply_after(200, gen_fsm, send_event, [self(), {step, Dir}]),
 	    {next_state, stopping, {NewPos, ElevG, EPid, Dir, Floors}};
 	{true, Floor} ->
