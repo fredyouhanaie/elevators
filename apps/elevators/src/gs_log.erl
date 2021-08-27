@@ -17,22 +17,25 @@
 -module(gs_log).
 
 -export([start/0, create/3, config/2]).
+-export([fbutton/1, ebutton/2, qbutton/0]).
 
 -include_lib("kernel/include/logger.hrl").
+
+-define(GS_owner, {gs_log, display}).
 
 %%--------------------------------------------------------------------
 
 start() ->
+    persistent_term:put(?GS_owner, self()),
     ObjId = erlang:make_ref(),
-    ?LOG_NOTICE("gs:start", #{objid => ObjId}),
+    ?LOG_NOTICE(#{objid => ObjId}),
     ObjId.
 
 %%--------------------------------------------------------------------
 
 create(Widget, Window, Props) ->
     ObjId = erlang:make_ref(),
-    ?LOG_NOTICE("gs:create",
-                #{widget => Widget,
+    ?LOG_NOTICE(#{widget => Widget,
                   window => Window,
                   props => Props,
                   objid => ObjId}),
@@ -41,9 +44,33 @@ create(Widget, Window, Props) ->
 %%--------------------------------------------------------------------
 
 config(Window, Config) ->
-    ?LOG_NOTICE("gs:config",
-                #{window => Window,
+    ?LOG_NOTICE(#{window => Window,
                   config => Config}),
     ok.
 
+%%--------------------------------------------------------------------
+
+%% generate event as if the call button on `Floor' has been pressed
+%%
+fbutton(Floor) ->
+    GS_owner_pid = persistent_term:get(?GS_owner),
+    GS_owner_pid ! {gs, dummy_obj_id, click, {floor, Floor}, []}.
+
+%%--------------------------------------------------------------------
+
+%% generate event as if the `Floor' button on elevator `Eno' has been
+%% pressed
+%%
+ebutton(ENo, Floor) ->
+    GS_owner_pid = persistent_term:get(?GS_owner),
+    GS_owner_pid ! {gs, dummy_obj_id, click, {elevator, ENo, Floor}, []}.
+
+%%--------------------------------------------------------------------
+
+%% generate the `Quit' button event
+%%
+qbutton() ->
+    GS_owner_pid = persistent_term:get(?GS_owner),
+    GS_owner_pid ! {gs, dummy_obj_id, click, quit, []}.
+    
 %%--------------------------------------------------------------------
