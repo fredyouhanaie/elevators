@@ -186,6 +186,8 @@ uninitialized({reset, State, Floor}, {ENo, unknown_floor}) ->
 uninitialized(_Other, Data) ->
     {next_state, uninitialized, Data}.
 -else.
+uninitialized({call, From}, get_state, {Eno, Floor}) ->
+    {keep_state, {Eno, Floor}, {reply, From, {Eno, uninitialized, Floor}}};
 uninitialized(cast, {reset, State, Floor}, {ENo, unknown_floor}) ->
     scheduler:set_controller(ENo, self()),
     sys_event:initialized(ENo, State, Floor),
@@ -200,10 +202,14 @@ open(close, {ENo, Floor}) ->
     scheduler:closed(ENo, Floor),
     {next_state, closed, {ENo, Floor}}.
 -else.
+open({call, From}, get_state, {Eno, Floor}) ->
+    {keep_state, {Eno, Floor}, {reply, From, {Eno, open, Floor}}};
 open(cast, close, {ENo, Floor}) ->
     sys_event:close(ENo),
     scheduler:closed(ENo, Floor),
-    {next_state, closed, {ENo, Floor}}.
+    {next_state, closed, {ENo, Floor}};
+open(cast, _Other, Data) ->
+    {keep_state, Data}.
 -endif.
 
 -ifdef(USE_GEN_FSM).
@@ -215,13 +221,17 @@ closed({move, Dir}, {ENo, Floor}) ->
     sys_event:move(ENo, Dir),
     {next_state, moving, {ENo, Floor}}.
 -else.
+closed({call, From}, get_state, {Eno, Floor}) ->
+    {keep_state, {Eno, Floor}, {reply, From, {Eno, closed, Floor}}};
 closed(cast, open, {ENo, Floor}) ->
     sys_event:open(ENo),
     timer:apply_after(1000, elevator, close, [self()]),
     {next_state, open, {ENo, Floor}};
 closed(cast, {move, Dir}, {ENo, Floor}) ->
     sys_event:move(ENo, Dir),
-    {next_state, moving, {ENo, Floor}}.
+    {next_state, moving, {ENo, Floor}};
+closed(cast, _Other, Data) ->
+    {keep_state, Data}.
 -endif.
 
 -ifdef(USE_GEN_FSM).
@@ -241,6 +251,8 @@ moving({at_floor, NewFloor}, {ENo, _Floor}) ->
     scheduler:passing(ENo, NewFloor),
     {next_state, moving, {ENo, NewFloor}}.
 -else.
+moving({call, From}, get_state, {Eno, Floor}) ->
+    {keep_state, {Eno, Floor}, {reply, From, {Eno, moving, Floor}}};
 moving(cast, {approaching, NewFloor}, {ENo, Floor}) ->
     sys_event:approaching(ENo, NewFloor),
     case scheduler:approaching(ENo, NewFloor) of
@@ -255,7 +267,9 @@ moving(cast, {approaching, NewFloor}, {ENo, Floor}) ->
     end;
 moving(cast, {at_floor, NewFloor}, {ENo, _Floor}) ->
     scheduler:passing(ENo, NewFloor),
-    {next_state, moving, {ENo, NewFloor}}.
+    {next_state, moving, {ENo, NewFloor}};
+moving(cast, _Other, Data) ->
+    {keep_state, Data}.
 -endif.
 
 -ifdef(USE_GEN_FSM).
@@ -266,12 +280,16 @@ stopping({at_floor, NewFloor}, {ENo, _Floor}) ->
     timer:apply_after(1000, elevator, close, [self()]),
     {next_state, open, {ENo, NewFloor}}.
 -else.
+stopping({call, From}, get_state, {Eno, Floor}) ->
+    {keep_state, {Eno, Floor}, {reply, From, {Eno, stopping, Floor}}};
 stopping(cast, {at_floor, NewFloor}, {ENo, _Floor}) ->
     sys_event:stopped_at(ENo, NewFloor),
     sys_event:open(ENo),
     scheduler:open(ENo, NewFloor),
     timer:apply_after(1000, elevator, close, [self()]),
-    {next_state, open, {ENo, NewFloor}}.
+    {next_state, open, {ENo, NewFloor}};
+stopping(cast, _Other, Data) ->
+    {keep_state, Data}.
 -endif.
 
 %%----------------------------------------------------------------------

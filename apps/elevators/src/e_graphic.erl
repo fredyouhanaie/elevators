@@ -121,7 +121,7 @@ set_controller(Elev, EPid) ->
     gen_fsm:send_all_state_event(Elev, {epid, EPid}).
 -else.
 set_controller(Elev, EPid) ->
-    gen_statem:call(Elev, {epid, EPid}).
+    gen_statem:cast(Elev, {epid, EPid}).
 -endif.
 
 %%%----------------------------------------------------------------------
@@ -144,7 +144,9 @@ open(close, {Pos, ElevG, EPid, nodir, Floors}) ->
 -else.
 open(cast, close, {Pos, ElevG, EPid, nodir, Floors}) ->
     ?GS:config(ElevG, {fill, black}),
-    {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}.
+    {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}};
+open(cast, _Other, Data) ->
+    {keep_state, Data}.
 -endif.
 
 -ifdef(USE_GEN_FSM).
@@ -155,12 +157,17 @@ closed({move, Dir}, {Pos, ElevG, EPid, nodir, Floors}) ->
     gen_fsm:send_event(self(), {step, Dir}),
     {next_state, moving, {Pos, ElevG, EPid, Dir, Floors}}.
 -else.
+closed(cast, {epid, EPid}, {Pos, ElevG, _OldPid, Dir, Floors}) ->
+    elevator:reset(EPid, closed, get_floor(Pos, Dir, Floors)),
+    {keep_state, {Pos, ElevG, EPid, Dir, Floors}};
 closed(cast, open, {Pos, ElevG, EPid, nodir, Floors}) ->
     ?GS:config(ElevG, {fill, cyan}),
     {next_state, open, {Pos, ElevG, EPid, nodir, Floors}};
 closed(cast, {move, Dir}, {Pos, ElevG, EPid, nodir, Floors}) ->
     gen_statem:cast(self(), {step, Dir}),
-    {next_state, moving, {Pos, ElevG, EPid, Dir, Floors}}.
+    {next_state, moving, {Pos, ElevG, EPid, Dir, Floors}};
+closed(cast, _Other, Data) ->
+    {keep_state, Data}.
 -endif.
 
 -ifdef(USE_GEN_FSM).
@@ -179,10 +186,12 @@ moving(cast, {step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
     NewPos = Pos + Dy,
     ?GS:config(ElevG, {move, {0, Dy}}),
     check_position(NewPos, Dir, EPid, Floors),
-    timer:apply_after(200, gen_fsm, send_event, [self(), {step, Dir}]),
+    timer:apply_after(200, gen_statem, cast, [self(), {step, Dir}]),
     {next_state, moving, {NewPos, ElevG, EPid, Dir, Floors}};
 moving(cast, stop, {Pos, ElevG, EPid, Dir, Floors}) ->
-    {next_state, stopping, {Pos, ElevG, EPid, Dir, Floors}}.
+    {next_state, stopping, {Pos, ElevG, EPid, Dir, Floors}};
+moving(cast, _Other, Data) ->
+    {keep_state, Data}.
 -endif.
 
 -ifdef(USE_GEN_FSM).
@@ -205,12 +214,14 @@ stopping(cast, {step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
 	    Dy = dy(Dir),
 	    NewPos = Pos + Dy,
 	    ?GS:config(ElevG, {move, {0, Dy}}),
-	    timer:apply_after(200, gen_fsm, send_event, [self(), {step, Dir}]),
+	    timer:apply_after(200, gen_statem, cast, [self(), {step, Dir}]),
 	    {next_state, stopping, {NewPos, ElevG, EPid, Dir, Floors}};
 	{true, Floor} ->
 	    elevator:at_floor(EPid, Floor),
 	    {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}
-    end.
+    end;
+stopping(cast, _Other, Data) ->
+    {keep_state, Data}.
 -endif.
 
 %%----------------------------------------------------------------------
