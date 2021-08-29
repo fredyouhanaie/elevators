@@ -1,8 +1,8 @@
 %%%----------------------------------------------------------------------
 %%% File    : scheduler.erl
-%%% Author  : Håkan Huss <hakan@erlang.ericsson.se>
+%%% Author  : HÃ¥kan Huss <hakan@erlang.ericsson.se>
 %%% Purpose : Elevator scheduler.
-%%% Created :  4 Aug 1999 by Håkan Huss <hakan@erlang.ericsson.se>
+%%% Created :  4 Aug 1999 by HÃ¥kan Huss <hakan@erlang.ericsson.se>
 %%%----------------------------------------------------------------------
 
 -module(scheduler).
@@ -172,7 +172,7 @@ handle_cast({closed, ENo, Floor}, Elevs) ->
 				       Elev#sched_elevator{state = closed})};
 	{value, Elev} ->
 	    #sched_elevator{pid = EPid, state = open,
-			    stoplist = [NextFloor | Rest]} = Elev,
+			    stoplist = [NextFloor | _Rest]} = Elev,
 	    elevator:move(EPid, direction(Floor, NextFloor)),
 	    {noreply, lists:keyreplace(ENo, #sched_elevator.number, Elevs,
 				       Elev#sched_elevator{state = moving})}
@@ -342,7 +342,7 @@ check_in_stoplist(Floor, Elevs) ->
 %% Find the best elevator and schedule it to go there.
 %%
 add_to_a_stoplist(Floor, Elevs) ->
-    [{_Time, Selected} | Rest] =
+    [{_Time, Selected} | _Rest] =
 	lists:sort(
 	  lists:map(fun (Elev) ->
 			    {stoplist:time_to(Floor,
