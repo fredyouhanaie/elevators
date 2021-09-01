@@ -1,6 +1,13 @@
 PROJECT = elevators
 REBAR = rebar3
 
+REL_DIR = _build/default/rel/$(PROJECT)
+
+V1 = 1.0
+V2 = 2.0
+
+#------------------------------------------------------------------
+
 all: rel1
 
 app:
@@ -9,11 +16,22 @@ app:
 clean:
 	@$(REBAR) clean
 
+#------------------------------------------------------------------
+
 rel1: clean-release app
-	@./relx -c rel1/relx.config release tar
+	@$(REBAR) release --relname $(PROJECT) --relvsn $(V1) \
+	&& $(REBAR) tar   --relname $(PROJECT) --relvsn $(V1)
+
+#------------------------------------------------------------------
 
 rel2: clean app
-	@./relx -c rel2/relx.config release relup tar
+	@$(REBAR) release --relname $(PROJECT) --relvsn $(V2) \
+	&& $(REBAR) relup --relname $(PROJECT) --relvsn $(V2) --upfrom $(V1) \
+	&& $(REBAR) tar   --relname $(PROJECT) --relvsn $(V2)
+
+#------------------------------------------------------------------
 
 clean-release:
-	rm -rf rel1/elevators rel2/elevators
+	rm -rf $(REL_DIR)
+
+#------------------------------------------------------------------
