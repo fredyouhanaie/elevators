@@ -2,48 +2,55 @@
 
 set -e
 
-STARTDIR=`pwd`
+STARTDIR=$(pwd)
 
-/tmp/elevators/bin/elevators-1 stop || echo "No previous node running."
-rm -rf /tmp/elevators
-rm -rf _rel
+SRC_DIR='apps/elevators/src'
+BLD_DIR='_build'
+TMP_DIR='_tmp/elevators'
+
+V1='1.0'
+V2='2.0'
+
+${TMP_DIR}/bin/elevators-${V1} stop || echo "No previous node running."
+rm -rf ${TMP_DIR}
+rm -rf ${BLD_DIR}
 
 make rel1
 
 echo "Backup version 1..."
-mv src/elevators.app.src src/elevators.app.src.v1
-mv src/scheduler.erl src/scheduler.erl.v1
+mv -v ${SRC_DIR}/elevators.app.src ${SRC_DIR}/elevators.app.src.v1
+mv -v ${SRC_DIR}/scheduler.erl ${SRC_DIR}/scheduler.erl.v1
 
 echo "Copy over upgrade..."
-cp upgrade/elevators.app.src src/
-cp upgrade/scheduler.erl src/
-cp upgrade/elevators.appup ./ebin/
+cp -v upgrade/elevators.app.src ${SRC_DIR}
+cp -v upgrade/scheduler.erl ${SRC_DIR}
+cp -v upgrade/elevators.appup ${BLD_DIR}/default/lib/elevators/ebin/
 
 make rel2
 
 echo "Back to version 1..."
-mv src/elevators.app.src.v1 src/elevators.app.src
-mv src/scheduler.erl.v1 src/scheduler.erl
+mv -v ${SRC_DIR}/elevators.app.src.v1 ${SRC_DIR}/elevators.app.src
+mv -v ${SRC_DIR}/scheduler.erl.v1 ${SRC_DIR}/scheduler.erl
 
-mkdir -p /tmp/elevators
-cp _rel/elevators/elevators-1.tar.gz /tmp
-cp _rel/elevators/elevators-2.tar.gz /tmp/elevators-2.tar.gz
+mkdir -pv ${TMP_DIR}
+cp -v ${BLD_DIR}/default/rel/elevators/elevators-${V1}.tar.gz ${TMP_DIR}
+cp -v ${BLD_DIR}/default/rel/elevators/elevators-${V2}.tar.gz ${TMP_DIR}
 
-cd /tmp/elevators
-tar xf /tmp/elevators-1.tar.gz
+cd ${TMP_DIR}
+tar xf elevators-${V1}.tar.gz
 
 echo "Starting node..."
-./bin/elevators-1 start
+./bin/elevators-${V1} daemon
 
-mkdir -p releases/2
-cp /tmp/elevators-2.tar.gz releases/2/elevators.tar.gz
+mkdir -pv releases/${V2}
+cp -v elevators-${V2}.tar.gz releases/${V2}/elevators.tar.gz
 
 sleep 5s # let the system boot
 
 echo "Upgrading node to version 2..."
-./bin/elevators-1 upgrade "2/elevators"
+./bin/elevators-${V1} upgrade "${V2}/elevators"
 
-rm /tmp/elevators-1.tar.gz
-rm /tmp/elevators-2.tar.gz
+rm -v elevators-${V1}.tar.gz
+rm -v elevators-${V2}.tar.gz
 
-cd $STARTDIR
+cd "$STARTDIR"
