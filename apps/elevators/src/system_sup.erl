@@ -22,7 +22,7 @@
 %%%----------------------------------------------------------------------
 start_link(NElevs, EventHandlers) ->
     supervisor:start_link({local, system_sup}, system_sup,
-			  [NElevs, EventHandlers]).
+                          [NElevs, EventHandlers]).
 
 %%%----------------------------------------------------------------------
 %%% Callback functions from supervisor
@@ -36,9 +36,9 @@ start_link(NElevs, EventHandlers) ->
 %%----------------------------------------------------------------------
 init([NElevs, EventHandlers]) ->
     {ok,{{one_for_one, 2, 3600},
-	 [{sys_event, {sys_event, start_link, [EventHandlers]},
-	   permanent, 2000, worker, dynamic},
-	  {scheduler, {scheduler, start_link, []},
-	   permanent, 2000, worker, [scheduler]},
-	  {elev_sup, {elev_sup, start_link, [NElevs]},
-	   permanent, infinity, supervisor, [elev_sup]}]}}.
+         [{sys_event, {sys_event, start_link, [EventHandlers]},
+           permanent, 2000, worker, dynamic},
+          {scheduler, {scheduler, start_link, []},
+           permanent, 2000, worker, [scheduler]},
+          {elev_sup, {elev_sup, start_link, [NElevs]},
+           permanent, infinity, supervisor, [elev_sup]}]}}.

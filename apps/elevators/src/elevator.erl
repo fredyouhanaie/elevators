@@ -18,22 +18,22 @@
 %% External exports
 -export([start_link/1]).
 -export([reset/3, move/2, stop/1, open/1, close/1,
-	 approaching/2, at_floor/2, get_state/1]).
+         approaching/2, at_floor/2, get_state/1]).
 
 -ifdef(USE_GEN_FSM).
 %% gen_fsm callbacks
 -export([init/1, handle_sync_event/4, handle_event/3,
-	 handle_info/3, terminate/3, code_change/4]).
+         handle_info/3, terminate/3, code_change/4]).
 -export([uninitialized/2, open/2, closed/2, moving/2, stopping/2]).
 -else.
 %% gen_statem callbacks
 -export([init/1, callback_mode/0,
-	 terminate/3, code_change/4]).
+         terminate/3, code_change/4]).
 -export([uninitialized/3, open/3, closed/3, moving/3, stopping/3]).
 -endif.
 
 %%%----------------------------------------------------------------------
-%%% 
+%%%
 %%% The elevator is represented by an FSM with four states:
 %%%  open:     Standing at a floor with the doors open
 %%%  closed:   Standing at a floor with the doors closed
@@ -238,14 +238,14 @@ closed(cast, _Other, Data) ->
 moving({approaching, NewFloor}, {ENo, Floor}) ->
     sys_event:approaching(ENo, NewFloor),
     case scheduler:approaching(ENo, NewFloor) of
-	{ok, stop} ->
-	    sys_event:stopping(ENo),
-	    {next_state, stopping, {ENo, Floor}};
-	{ok, continue} ->
-	    {next_state, moving, {ENo, Floor}};
-	_Other ->
-	    sys_event:stopping(ENo),
-	    {next_state, stopping, {ENo, Floor}}
+        {ok, stop} ->
+            sys_event:stopping(ENo),
+            {next_state, stopping, {ENo, Floor}};
+        {ok, continue} ->
+            {next_state, moving, {ENo, Floor}};
+        _Other ->
+            sys_event:stopping(ENo),
+            {next_state, stopping, {ENo, Floor}}
     end;
 moving({at_floor, NewFloor}, {ENo, _Floor}) ->
     scheduler:passing(ENo, NewFloor),
@@ -256,14 +256,14 @@ moving({call, From}, get_state, {Eno, Floor}) ->
 moving(cast, {approaching, NewFloor}, {ENo, Floor}) ->
     sys_event:approaching(ENo, NewFloor),
     case scheduler:approaching(ENo, NewFloor) of
-	{ok, stop} ->
-	    sys_event:stopping(ENo),
-	    {next_state, stopping, {ENo, Floor}};
-	{ok, continue} ->
-	    {next_state, moving, {ENo, Floor}};
-	_Other ->
-	    sys_event:stopping(ENo),
-	    {next_state, stopping, {ENo, Floor}}
+        {ok, stop} ->
+            sys_event:stopping(ENo),
+            {next_state, stopping, {ENo, Floor}};
+        {ok, continue} ->
+            {next_state, moving, {ENo, Floor}};
+        _Other ->
+            sys_event:stopping(ENo),
+            {next_state, stopping, {ENo, Floor}}
     end;
 moving(cast, {at_floor, NewFloor}, {ENo, _Floor}) ->
     scheduler:passing(ENo, NewFloor),

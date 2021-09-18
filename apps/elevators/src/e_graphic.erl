@@ -29,7 +29,7 @@
 %% gen_fsm callbacks
 -ifdef(USE_GEN_FSM).
 -export([init/1, open/2, closed/2, moving/2, stopping/2, handle_event/3,
-	 handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
+         handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
 -else.
 -export([callback_mode/0]).
 -export([init/1, open/3, closed/3, moving/3, stopping/3]).
@@ -37,7 +37,7 @@
 -endif.
 
 %%%----------------------------------------------------------------------
-%%% 
+%%%
 %%% The graphical elevator is represented by an FSM with four states:
 %%%  open:     Standing at a floor with the doors open
 %%%  closed:   Standing at a floor with the doors closed
@@ -50,27 +50,27 @@
 %%% The states, events and corresponding actions are:
 %%%
 %%%
-%%%      State |     open     |    closed    |    moving     |   stopping    
-%%% Event      |              |              |               |               
-%%% -----------+--------------+--------------+---------------+-------------- 
-%%% open       |      N/A     | Open doors   |      N/A      |      N/A      
-%%%            |              | -> open      |               |               
-%%% -----------+--------------+--------------+---------------+-------------- 
-%%% close      | Close doors  |      N/A     |      N/A      |      N/A      
-%%%            | -> closed    |              |               |               
-%%% -----------+--------------+--------------+---------------+-------------- 
-%%% stop       |      N/A     |      N/A     | Start stopping|      N/A      
-%%%            |              |              | -> stopping   |               
-%%% -----------+--------------+--------------+---------------+-------------- 
-%%% {move, Dir}|      N/A     | Start moving |      N/A      |      N/A      
-%%%            |              | -> moving    |               |               
+%%%      State |     open     |    closed    |    moving     |   stopping
+%%% Event      |              |              |               |
+%%% -----------+--------------+--------------+---------------+--------------
+%%% open       |      N/A     | Open doors   |      N/A      |      N/A
+%%%            |              | -> open      |               |
+%%% -----------+--------------+--------------+---------------+--------------
+%%% close      | Close doors  |      N/A     |      N/A      |      N/A
+%%%            | -> closed    |              |               |
+%%% -----------+--------------+--------------+---------------+--------------
+%%% stop       |      N/A     |      N/A     | Start stopping|      N/A
+%%%            |              |              | -> stopping   |
+%%% -----------+--------------+--------------+---------------+--------------
+%%% {move, Dir}|      N/A     | Start moving |      N/A      |      N/A
+%%%            |              | -> moving    |               |
 %%% -----------+--------------+--------------+---------------+--------------
 %%% {step, Dir}|      N/A     |      N/A     | take step     | take step
 %%%            |              |              | check position| -> stopping
 %%%            |              |              | -> moving     | -> closed
-%%% -----------+--------------+--------------+---------------+-------------- 
-%%% {epid, EP} |         Set controlling process of elevator to EP 
-%%% -----------+--------------+--------------+---------------+-------------- 
+%%% -----------+--------------+--------------+---------------+--------------
+%%% {epid, EP} |         Set controlling process of elevator to EP
+%%% -----------+--------------+--------------+---------------+--------------
 %%%
 %%%----------------------------------------------------------------------
 %%%----------------------------------------------------------------------
@@ -197,28 +197,28 @@ moving(cast, _Other, Data) ->
 -ifdef(USE_GEN_FSM).
 stopping({step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
     case at_floor(Pos, Floors) of
-	false ->
-	    Dy = dy(Dir),
-	    NewPos = Pos + Dy,
-	    ?GS:config(ElevG, {move, {0, Dy}}),
-	    timer:apply_after(200, gen_fsm, send_event, [self(), {step, Dir}]),
-	    {next_state, stopping, {NewPos, ElevG, EPid, Dir, Floors}};
-	{true, Floor} ->
-	    elevator:at_floor(EPid, Floor),
-	    {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}
+        false ->
+            Dy = dy(Dir),
+            NewPos = Pos + Dy,
+            ?GS:config(ElevG, {move, {0, Dy}}),
+            timer:apply_after(200, gen_fsm, send_event, [self(), {step, Dir}]),
+            {next_state, stopping, {NewPos, ElevG, EPid, Dir, Floors}};
+        {true, Floor} ->
+            elevator:at_floor(EPid, Floor),
+            {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}
     end.
 -else.
 stopping(cast, {step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
     case at_floor(Pos, Floors) of
-	false ->
-	    Dy = dy(Dir),
-	    NewPos = Pos + Dy,
-	    ?GS:config(ElevG, {move, {0, Dy}}),
-	    timer:apply_after(200, gen_statem, cast, [self(), {step, Dir}]),
-	    {next_state, stopping, {NewPos, ElevG, EPid, Dir, Floors}};
-	{true, Floor} ->
-	    elevator:at_floor(EPid, Floor),
-	    {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}
+        false ->
+            Dy = dy(Dir),
+            NewPos = Pos + Dy,
+            ?GS:config(ElevG, {move, {0, Dy}}),
+            timer:apply_after(200, gen_statem, cast, [self(), {step, Dir}]),
+            {next_state, stopping, {NewPos, ElevG, EPid, Dir, Floors}};
+        {true, Floor} ->
+            elevator:at_floor(EPid, Floor),
+            {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}
     end;
 stopping(cast, _Other, Data) ->
     {keep_state, Data}.
@@ -295,10 +295,10 @@ dy(down) -> 10.
 %%----------------------------------------------------------------------
 check_position(Pos, Dir, EPid, Floors) ->
     case lists:keysearch(Pos + 2 * dy(Dir), 2, Floors) of
-	{value, {Floor, _}} ->
-	    elevator:approaching(EPid, Floor);
-	_ ->
-	    check_arrived(Pos, EPid, Floors)
+        {value, {Floor, _}} ->
+            elevator:approaching(EPid, Floor);
+        _ ->
+            check_arrived(Pos, EPid, Floors)
     end.
 
 %%----------------------------------------------------------------------
@@ -314,11 +314,11 @@ check_position(Pos, Dir, EPid, Floors) ->
 %%----------------------------------------------------------------------
 check_arrived(Pos, EPid, Floors) ->
     case at_floor(Pos, Floors) of
-	{true, Floor} ->
-	    elevator:at_floor(EPid, Floor);
-	false ->
-	    ok
-    end. 
+        {true, Floor} ->
+            elevator:at_floor(EPid, Floor);
+        false ->
+            ok
+    end.
 
 %%----------------------------------------------------------------------
 %% at_floor(Pos, Floors) -> {true, FloorNo} | false
@@ -331,12 +331,12 @@ check_arrived(Pos, EPid, Floors) ->
 %%----------------------------------------------------------------------
 at_floor(Pos, Floors) ->
     case lists:keysearch(Pos, 2, Floors) of
-	{value, {Floor, _}} ->
-	    {true, Floor};
-	false ->
-	    false
-    end. 
-    
+        {value, {Floor, _}} ->
+            {true, Floor};
+        false ->
+            false
+    end.
+
 %%----------------------------------------------------------------------
 %% get_floor(Pos, Dir, Floors) -> FloorNo
 %%  Pos = int()

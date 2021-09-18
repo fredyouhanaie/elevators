@@ -22,7 +22,7 @@
 %%%----------------------------------------------------------------------
 start_link(InitFloor, NFloors, NElevs) ->
     supervisor:start_link({local, sim_sup}, sim_sup,
-			  [NElevs, [{display, [InitFloor, NFloors, NElevs]}]]).
+                          [NElevs, [{display, [InitFloor, NFloors, NElevs]}]]).
 
 %%%----------------------------------------------------------------------
 %%% Callback functions from supervisor
@@ -34,7 +34,7 @@ start_link(InitFloor, NFloors, NElevs) ->
 %%----------------------------------------------------------------------
 init([NElevs, EventHandlers]) ->
     {ok,{{one_for_all, 2, 3600},
-	 [{g_sup, {g_sup, start_link, []},
-	   permanent, infinity, supervisor, [g_sup]},
-	  {system_sup, {system_sup, start_link, [NElevs, EventHandlers]},
-	   permanent, infinity, supervisor, [system_sup]}]}}.
+         [{g_sup, {g_sup, start_link, []},
+           permanent, infinity, supervisor, [g_sup]},
+          {system_sup, {system_sup, start_link, [NElevs, EventHandlers]},
+           permanent, infinity, supervisor, [system_sup]}]}}.

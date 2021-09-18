@@ -18,7 +18,7 @@
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-	 terminate/2, code_change/3]).
+         terminate/2, code_change/3]).
 
 -record(sched_elevator, {number, pid, state, floor, stoplist = []}).
 
@@ -31,7 +31,7 @@ start_link() ->
 
 %%----------------------------------------------------------------------
 %% set_controller(ENo, EPid)
-%%  Informs the scheduler that the control porcess EPid has been 
+%%  Informs the scheduler that the control porcess EPid has been
 %%  started for elevator ENo.
 %%----------------------------------------------------------------------
 set_controller(ENo, EPid) ->
@@ -97,20 +97,20 @@ approaching(ENo, Floor) ->
 %%----------------------------------------------------------------------
 init([]) ->
     Elevs =
-	case whereis(elev_sup) of
-	    undefined ->
-		[];
-	    _Pid ->
-		lists:map(fun ({ENo, EPid, _, _}) ->
-				  {_ENo, State, Floor} =
-				      transform(elevator:get_state(EPid)),
-				  #sched_elevator{number = ENo,
-						  pid = EPid,
-						  state = State,
-						  floor = Floor}
-			  end,
-			  supervisor:which_children(elev_sup))
-	end,
+        case whereis(elev_sup) of
+            undefined ->
+                [];
+            _Pid ->
+                lists:map(fun ({ENo, EPid, _, _}) ->
+                                  {_ENo, State, Floor} =
+                                      transform(elevator:get_state(EPid)),
+                                  #sched_elevator{number = ENo,
+                                                  pid = EPid,
+                                                  state = State,
+                                                  floor = Floor}
+                          end,
+                          supervisor:which_children(elev_sup))
+        end,
     {ok, Elevs}.
 
 %%----------------------------------------------------------------------
@@ -119,12 +119,12 @@ init([]) ->
 handle_call({approaching, ENo, NewFloor}, _From, Elevs) ->
     NewElevs = change_floor(ENo, NewFloor, Elevs),
     case get_stoplist(ENo,NewElevs) of
-	[] ->
-	    {reply, {ok, stop}, NewElevs};
-	[NewFloor|_] ->
-	    {reply,{ok,stop},NewElevs};
-	_ ->
-	    {reply,{ok,continue},NewElevs}
+        [] ->
+            {reply, {ok, stop}, NewElevs};
+        [NewFloor|_] ->
+            {reply,{ok,stop},NewElevs};
+        _ ->
+            {reply,{ok,continue},NewElevs}
     end.
 
 %%----------------------------------------------------------------------
@@ -133,16 +133,16 @@ handle_call({approaching, ENo, NewFloor}, _From, Elevs) ->
 handle_cast({set_controller, ENo, EPid}, Elevs) ->
     {_ENo,  State, Floor} = transform(elevator:get_state(EPid)),
     New = #sched_elevator{number = ENo,
-			  pid = EPid,
-			  state = State,
-			  floor = Floor},
+                          pid = EPid,
+                          state = State,
+                          floor = Floor},
     case lists:keysearch(ENo, #sched_elevator.number, Elevs) of
-	false ->
-	    {noreply, [New | Elevs]};
-	{value, #sched_elevator{stoplist = SL}} ->
-	    {noreply,
-	     lists:keyreplace(ENo, #sched_elevator.number, Elevs,
-			      New#sched_elevator{stoplist = SL})}
+        false ->
+            {noreply, [New | Elevs]};
+        {value, #sched_elevator{stoplist = SL}} ->
+            {noreply,
+             lists:keyreplace(ENo, #sched_elevator.number, Elevs,
+                              New#sched_elevator{stoplist = SL})}
     end;
 
 %%----------------------------------------------------------------------
@@ -166,16 +166,16 @@ handle_cast({e_button, ENo, Floor}, Elevs) ->
 %%----------------------------------------------------------------------
 handle_cast({closed, ENo, Floor}, Elevs) ->
     case lists:keysearch(ENo, #sched_elevator.number, Elevs) of
-	{value, Elev} when Elev#sched_elevator.state == open,
-			   Elev#sched_elevator.stoplist == [] ->
-	    {noreply, lists:keyreplace(ENo, #sched_elevator.number, Elevs,
-				       Elev#sched_elevator{state = closed})};
-	{value, Elev} ->
-	    #sched_elevator{pid = EPid, state = open,
-			    stoplist = [NextFloor | _Rest]} = Elev,
-	    elevator:move(EPid, direction(Floor, NextFloor)),
-	    {noreply, lists:keyreplace(ENo, #sched_elevator.number, Elevs,
-				       Elev#sched_elevator{state = moving})}
+        {value, Elev} when Elev#sched_elevator.state == open,
+                           Elev#sched_elevator.stoplist == [] ->
+            {noreply, lists:keyreplace(ENo, #sched_elevator.number, Elevs,
+                                       Elev#sched_elevator{state = closed})};
+        {value, Elev} ->
+            #sched_elevator{pid = EPid, state = open,
+                            stoplist = [NextFloor | _Rest]} = Elev,
+            elevator:move(EPid, direction(Floor, NextFloor)),
+            {noreply, lists:keyreplace(ENo, #sched_elevator.number, Elevs,
+                                       Elev#sched_elevator{state = moving})}
     end;
 
 %%----------------------------------------------------------------------
@@ -184,22 +184,22 @@ handle_cast({closed, ENo, Floor}, Elevs) ->
 handle_cast({passing, ENo, NewFloor}, Elevs) ->
     {value, Elev} = lists:keysearch(ENo, #sched_elevator.number, Elevs),
     {noreply, lists:keyreplace(ENo, #sched_elevator.number, Elevs,
-			       Elev#sched_elevator{floor = NewFloor})};
+                               Elev#sched_elevator{floor = NewFloor})};
 
 handle_cast({open, ENo, NewFloor}, Elevs) ->
     {value, Elev} = lists:keysearch(ENo, #sched_elevator.number, Elevs),
     NewStoplist = case Elev#sched_elevator.stoplist of
-		      [NewFloor | Rest] ->	% The first is the normal case,
-			  Rest;			% the rest can occur if
-		      [] ->			% the scheduler has been
-			  [];			% restarted.
-		      Other ->
-			  Other
-		  end,
+                      [NewFloor | Rest] ->      % The first is the normal case,
+                          Rest;                 % the rest can occur if
+                      [] ->                     % the scheduler has been
+                          [];                   % restarted.
+                      Other ->
+                          Other
+                  end,
     {noreply, lists:keyreplace(ENo, #sched_elevator.number, Elevs,
-			       Elev#sched_elevator{floor = NewFloor,
-						   state = open,
-						   stoplist = NewStoplist})}.
+                               Elev#sched_elevator{floor = NewFloor,
+                                                   state = open,
+                                                   stoplist = NewStoplist})}.
 
 %%----------------------------------------------------------------------
 %% No messages should be sent.
@@ -239,15 +239,15 @@ direction(From, To) when From > To ->
 
 get_stoplist(ENo, Elevs) ->
     {value, #sched_elevator{stoplist = SL}} =
-	lists:keysearch(ENo, #sched_elevator.number, Elevs),
+        lists:keysearch(ENo, #sched_elevator.number, Elevs),
     SL.
 
 change_floor(ENo, NewFloor, Elevs) ->
     {value, Elev} = lists:keysearch(ENo, #sched_elevator.number, Elevs),
     lists:keyreplace(ENo,
-		     #sched_elevator.number,
-		     Elevs,
-		     Elev#sched_elevator{floor = NewFloor}).
+                     #sched_elevator.number,
+                     Elevs,
+                     Elev#sched_elevator{floor = NewFloor}).
 
 %%----------------------------------------------------------------------
 %% add_stop(Floor, Elev)
@@ -257,30 +257,30 @@ change_floor(ENo, NewFloor, Elevs) ->
 %% Elevator is already there and open, ignore request
 %%
 add_stop(Floor, Elev) when Elev#sched_elevator.floor == Floor,
-			   Elev#sched_elevator.state == open ->
+                           Elev#sched_elevator.state == open ->
     Elev;
 
 %% Elevator is there, but closed, open it.
 %%
 add_stop(Floor, Elev) when Elev#sched_elevator.floor == Floor,
-			   Elev#sched_elevator.state == closed ->
+                           Elev#sched_elevator.state == closed ->
     elevator:open(Elev#sched_elevator.pid),
     Elev#sched_elevator{state = open};
 
 %% Elevator is idle, start it moving.
 %%
 add_stop(Floor, Elev) when Elev#sched_elevator.state == closed,
-			   Elev#sched_elevator.stoplist == [] ->
+                           Elev#sched_elevator.stoplist == [] ->
     elevator:move(Elev#sched_elevator.pid,
-		  direction(Elev#sched_elevator.floor, Floor)),
+                  direction(Elev#sched_elevator.floor, Floor)),
     Elev#sched_elevator{state = moving, stoplist = [Floor]};
 
 %% Otherwise just add to the stoplist.
 %%
 add_stop(Floor, Elev) ->
     Elev#sched_elevator{stoplist = stoplist:add(Floor,
-						Elev#sched_elevator.floor,
-						Elev#sched_elevator.stoplist)}.
+                                                Elev#sched_elevator.floor,
+                                                Elev#sched_elevator.stoplist)}.
 
 %%----------------------------------------------------------------------
 %% schedule_elevator(Floor, Elevs)
@@ -294,77 +294,77 @@ schedule_elevator(Floor, Elevs) ->
 %%
 check_open_elevator(Floor, Elevs) ->
     case lists:any(fun (Elev) when Elev#sched_elevator.floor == Floor,
-				   Elev#sched_elevator.state == open ->
-			   true;
-		       (_) ->
-			   false
-		   end,
-		   Elevs) of
-	true -> 
-	    Elevs;
-	false ->
-	    check_closed_elevator(Floor, Elevs)
+                                   Elev#sched_elevator.state == open ->
+                           true;
+                       (_) ->
+                           false
+                   end,
+                   Elevs) of
+        true ->
+            Elevs;
+        false ->
+            check_closed_elevator(Floor, Elevs)
     end.
 
 %% Check if there is a closed (idle) elevator there. If so, open it.
-%% 
+%%
 check_closed_elevator(Floor, Elevs) ->
     case lists:filter(fun (Elev) when Elev#sched_elevator.floor == Floor,
-				      Elev#sched_elevator.state == closed ->
-			      true;
-			  (_) ->
-			      false
-		      end,
-		      Elevs) of
-	[Elev | _Rest] ->
-	    elevator:open(Elev#sched_elevator.pid),
-	    lists:keyreplace(Elev#sched_elevator.number,
-			     #sched_elevator.number,
-			     Elevs,
-			     Elev#sched_elevator{state = open});
-	[] ->
-	    check_in_stoplist(Floor, Elevs)
+                                      Elev#sched_elevator.state == closed ->
+                              true;
+                          (_) ->
+                              false
+                      end,
+                      Elevs) of
+        [Elev | _Rest] ->
+            elevator:open(Elev#sched_elevator.pid),
+            lists:keyreplace(Elev#sched_elevator.number,
+                             #sched_elevator.number,
+                             Elevs,
+                             Elev#sched_elevator{state = open});
+        [] ->
+            check_in_stoplist(Floor, Elevs)
     end.
-	
+
 %% Check if any elevator is scheduled to stop there already. If so,
 %% nothing is done.
 check_in_stoplist(Floor, Elevs) ->
     case lists:any(fun (#sched_elevator{stoplist = SL}) ->
-			   lists:member(Floor, SL)
-		   end,
-		   Elevs) of
-	true ->
-	    Elevs;
-	false ->
-	    add_to_a_stoplist(Floor, Elevs)
+                           lists:member(Floor, SL)
+                   end,
+                   Elevs) of
+        true ->
+            Elevs;
+        false ->
+            add_to_a_stoplist(Floor, Elevs)
     end.
 
 %% Find the best elevator and schedule it to go there.
 %%
 add_to_a_stoplist(Floor, Elevs) ->
     [{_Time, Selected} | _Rest] =
-	lists:sort(
-	  lists:map(fun (Elev) ->
-			    {stoplist:time_to(Floor,
-					      Elev#sched_elevator.floor,
-					      Elev#sched_elevator.stoplist),
-			     Elev}
-		    end,
-		    Elevs)),
+        lists:sort(
+          lists:map(fun (Elev) ->
+                            {stoplist:time_to(Floor,
+                                              Elev#sched_elevator.floor,
+                                              Elev#sched_elevator.stoplist),
+                             Elev}
+                    end,
+                    Elevs)),
     NewState = case Selected#sched_elevator.state of
-		   closed ->
-		       elevator:move(Selected#sched_elevator.pid,
-				     direction(Selected#sched_elevator.floor,
-					       Floor)),
-		       moving;
-		   State ->
-		       State
-	       end,
+                   closed ->
+                       elevator:move(Selected#sched_elevator.pid,
+                                     direction(Selected#sched_elevator.floor,
+                                               Floor)),
+                       moving;
+                   State ->
+                       State
+               end,
     SL = stoplist:add(Floor,
-		      Selected#sched_elevator.floor,
-		      Selected#sched_elevator.stoplist),
+                      Selected#sched_elevator.floor,
+                      Selected#sched_elevator.stoplist),
     lists:keyreplace(Selected#sched_elevator.number,
-		     #sched_elevator.number,
-		     Elevs,
-		     Selected#sched_elevator{state = NewState,
-					     stoplist = SL}).
+                     #sched_elevator.number,
+                     Elevs,
+                     Selected#sched_elevator{state = NewState,
+                                             stoplist = SL}).

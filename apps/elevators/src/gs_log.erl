@@ -72,5 +72,5 @@ ebutton(ENo, Floor) ->
 qbutton() ->
     GS_owner_pid = persistent_term:get(?GS_owner),
     GS_owner_pid ! {gs, dummy_obj_id, click, quit, []}.
-    
+
 %%--------------------------------------------------------------------

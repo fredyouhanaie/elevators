@@ -8,7 +8,7 @@
 -vsn("1.0").
 
 -export([start/3, start_trace/3, stop/0, start_sup/3,
-	 top_proc/4, top_proc_sup/3]).
+         top_proc/4, top_proc_sup/3]).
 
 %%----------------------------------------------------------------------
 %% start(IFloor, NFloors, NElevs)
@@ -39,16 +39,16 @@ start_sup(IFloor, NFloors, NElevs) ->
 %%----------------------------------------------------------------------
 stop() ->
     case whereis (top_proc) of
-	undefined ->
-	    ok;
-	_ ->
-	    top_proc ! stop
+        undefined ->
+            ok;
+        _ ->
+            top_proc ! stop
     end,
     case whereis (top_proc_sup) of
-	undefined ->
-	    ok;
-	_ ->
-	    top_proc_sup ! stop
+        undefined ->
+            ok;
+        _ ->
+            top_proc_sup ! stop
     end,
     stopped.
 
@@ -78,6 +78,6 @@ top_proc_sup(IFloor, NFloors, NElevs) ->
 
 block() ->
     receive
-	stop ->
-	    exit(shutdown)
+        stop ->
+            exit(shutdown)
     end.

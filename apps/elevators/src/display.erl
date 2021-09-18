@@ -13,7 +13,7 @@
 
 %% gen_event callbacks
 -export([init/1, handle_event/2, handle_call/2, handle_info/2,
-	 terminate/2, code_change/3]).
+         terminate/2, code_change/3]).
 
 -ifdef(GS_MOCK).
 -define(GS, ?GS_MOCK).
@@ -49,10 +49,10 @@ init([Floor, NFloors, NElevs]) ->
     %% Compute some values needed later on
     CW = NElevs*?EW + 2*?F + (NElevs-1)*?EW, % Canvas width
     CH = NFloors*(?EH+?F),           % Canvas height
-    
+
     WW = ?I+?FBW+?I+CW+?I,           % Window width
     WH = ?I+CH+?I+((NFloors + 1) div 2)*?EBH+?I+?BH+?I,  % Window height
-    
+
     %% Create the actual window
     Win = ?GS:create(window, ?GS:start(), [{title, "Elevators"},
                                            {x, 300}, {y, 100},
@@ -61,11 +61,11 @@ init([Floor, NFloors, NElevs]) ->
     %% This frame holds the floor buttons
     FButtonF = ?GS:create(frame, Win, [{x, ?I}, {y, ?I},
                                        {width, ?FBW}, {height, CH}]),
-    
+
     %% The canvas is used to draw the floors and elevators on
     Canvas = ?GS:create(canvas, Win, [{x, 2*?I+?FBW}, {y, ?I},
                                       {width, CW}, {height, CH},
-				      {bw, 2}, {relief, raised}]),
+                                      {bw, 2}, {relief, raised}]),
 
     Floors = draw_floors(NFloors, 0, Canvas, CW, FButtonF),
 
@@ -84,9 +84,9 @@ init([Floor, NFloors, NElevs]) ->
                                      {width, ?BW}, {height, ?BH},
                                      {label, {text, "Quit"}},
                                      {data, quit}]),
-    
+
     ?GS:config(Win, {map, true}),
-    
+
     {ok, start_e_graphics(1, Pos, ElevGs, Floors, [])}.
 
 %%----------------------------------------------------------------------
@@ -149,10 +149,10 @@ handle_info({gs, _Obj, click, {elevator, ENo, Floor}, _Args}, ElevGs) ->
     {ok, ElevGs};
 handle_info({gs, _Obj, click, quit, _Args}, ElevGs) ->
     case application:get_application() of
-	undefined ->
-	    util:stop();
-	{ok, App} ->
-	    spawn(application, stop, [App])
+        undefined ->
+            util:stop();
+        {ok, App} ->
+            spawn(application, stop, [App])
     end,
     {ok, ElevGs}.
 
@@ -265,15 +265,15 @@ draw_buttons(B, E, NFloors, X, Y, EButtonF) when B rem 2 ==0 ->
 start_e_graphics(_N, _Pos, [], _Floors, Result) ->
     lists:reverse(Result);
 start_e_graphics(N, Pos, [EG | ElevGs], Floors, Result) ->
-    {ok, GC} = 
-	case whereis(g_sup) of
-	    undefined ->
-		e_graphic:start_link(Pos, EG, Floors);
-	    _Pid ->
-		supervisor:start_child(g_sup,
-				       {N,
-					{e_graphic, start_link,
-					 [Pos, EG, Floors]},
-					permanent, 2000, worker, [e_graphic]})
-	end,
+    {ok, GC} =
+        case whereis(g_sup) of
+            undefined ->
+                e_graphic:start_link(Pos, EG, Floors);
+            _Pid ->
+                supervisor:start_child(g_sup,
+                                       {N,
+                                        {e_graphic, start_link,
+                                         [Pos, EG, Floors]},
+                                        permanent, 2000, worker, [e_graphic]})
+        end,
     start_e_graphics(N+1, Pos, ElevGs, Floors, [{N, GC} | Result]).

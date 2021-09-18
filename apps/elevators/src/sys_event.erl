@@ -12,9 +12,9 @@
 %% External exports
 -export([start_link/1, add_handler/2]).
 -export([initialized/3, open/1, close/1, move/2, stopping/1,
-	 approaching/2, stopped_at/2, passing/2,
-	 f_button_pressed/1, e_button_pressed/2,
-	 controller_started/2]).
+         approaching/2, stopped_at/2, passing/2,
+         f_button_pressed/1, e_button_pressed/2,
+         controller_started/2]).
 
 %%%----------------------------------------------------------------------
 %%% API
