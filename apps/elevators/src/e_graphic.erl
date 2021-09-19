@@ -142,6 +142,9 @@ open(close, {Pos, ElevG, EPid, nodir, Floors}) ->
     ?GS:config(ElevG, {fill, black}),
     {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}.
 -else.
+open(cast, {epid, EPid}, {Pos, ElevG, _OldPid, Dir, Floors}) ->
+    elevator:reset(EPid, open, get_floor(Pos, Dir, Floors)),
+    {keep_state, {Pos, ElevG, EPid, Dir, Floors}};
 open(cast, close, {Pos, ElevG, EPid, nodir, Floors}) ->
     ?GS:config(ElevG, {fill, black}),
     {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}};
@@ -181,6 +184,9 @@ moving({step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
 moving(stop, {Pos, ElevG, EPid, Dir, Floors}) ->
     {next_state, stopping, {Pos, ElevG, EPid, Dir, Floors}}.
 -else.
+moving(cast, {epid, EPid}, {Pos, ElevG, _OldPid, Dir, Floors}) ->
+    elevator:reset(EPid, moving, get_floor(Pos, Dir, Floors)),
+    {keep_state, {Pos, ElevG, EPid, Dir, Floors}};
 moving(cast, {step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
     Dy = dy(Dir),
     NewPos = Pos + Dy,
@@ -208,6 +214,9 @@ stopping({step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
             {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}
     end.
 -else.
+stopping(cast, {epid, EPid}, {Pos, ElevG, _OldPid, Dir, Floors}) ->
+    elevator:reset(EPid, stopping, get_floor(Pos, Dir, Floors)),
+    {keep_state, {Pos, ElevG, EPid, Dir, Floors}};
 stopping(cast, {step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
     case at_floor(Pos, Floors) of
         false ->
