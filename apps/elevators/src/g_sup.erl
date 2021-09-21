@@ -20,6 +20,7 @@
 %%%----------------------------------------------------------------------
 %%% API
 %%%----------------------------------------------------------------------
+-spec start_link() -> supervisor:startlink_ret().
 start_link() ->
     supervisor:start_link({local, g_sup}, g_sup, []).
 
@@ -32,6 +33,7 @@ start_link() ->
 %% Note that all the graphical elevator processes are added dynamically
 %% when the display event handler is initializing itself.
 %%----------------------------------------------------------------------
+-spec init([]) -> {ok, {supervisor:sup_flags(), [supervisor:child_spec()]}}.
 init([]) ->
     {ok, {{one_for_one, 0, 1}, []}}.
 

@@ -21,11 +21,19 @@
 %%----------------------------------------------------------------------
 %% Start the top-level supervisor with the appropriate values.
 %%----------------------------------------------------------------------
+-spec start(normal, []) ->
+          {ok, pid()} | {ok, pid(), term()} | {error, term()}.
 start(normal, []) ->
-    sim_sup:start_link(3,6,2).
+    case sim_sup:start_link(3, 6, 2) of
+        {ok, Pid} ->
+            {ok, Pid};
+        Error ->
+            Error
+    end.
 
 %%----------------------------------------------------------------------
 %% Stop has nothing special to do.
 %%----------------------------------------------------------------------
+-spec stop(term()) -> ok.
 stop(_State) ->
     ok.

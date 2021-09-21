@@ -15,6 +15,7 @@
 %%  Starts the system without supervision (except for the graphics
 %%  portion).
 %%----------------------------------------------------------------------
+-spec start(pos_integer(), pos_integer(), pos_integer()) -> pid().
 start(IFloor, NFloors, NElevs) ->
     spawn(util, top_proc, [IFloor, NFloors, NElevs, []]).
 
@@ -23,6 +24,7 @@ start(IFloor, NFloors, NElevs) ->
 %%  Starts the system without supervision (except for the graphics
 %%  portion). Installs the tracer event handler.
 %%----------------------------------------------------------------------
+-spec start_trace(pos_integer(), pos_integer(), pos_integer()) -> pid().
 start_trace(IFloor, NFloors, NElevs) ->
     spawn(util, top_proc, [IFloor, NFloors, NElevs, [{tracer, []}]]).
 
@@ -30,6 +32,7 @@ start_trace(IFloor, NFloors, NElevs) ->
 %% start_sup(IFloor, NFloors, NElevs)
 %%  Starts the system with supervision.
 %%----------------------------------------------------------------------
+-spec start_sup(pos_integer(), pos_integer(), pos_integer()) -> pid().
 start_sup(IFloor, NFloors, NElevs) ->
     spawn(util, top_proc_sup, [IFloor, NFloors, NElevs]).
 
@@ -37,6 +40,7 @@ start_sup(IFloor, NFloors, NElevs) ->
 %% stop()
 %%  Attempts to stop the system
 %%----------------------------------------------------------------------
+-spec stop() -> stopped.
 stop() ->
     case whereis (top_proc) of
         undefined ->
@@ -57,6 +61,7 @@ stop() ->
 %%  Starts and links to the important processes, then blocks until it
 %%  gets a stop messsage.
 %%----------------------------------------------------------------------
+-spec top_proc(pos_integer(), pos_integer(), pos_integer(), [any()]) -> no_return().
 top_proc(IFloor, NFloors, NElevs, Handlers) ->
     register(top_proc, self()),
     {ok, _SPid} = scheduler:start_link(),
@@ -71,11 +76,13 @@ top_proc(IFloor, NFloors, NElevs, Handlers) ->
 %% top_proc(IFloor, NFloors, NElevs, Handlers)
 %%  As above, but with supervision.
 %%----------------------------------------------------------------------
+-spec top_proc_sup(pos_integer(), pos_integer(), pos_integer()) -> no_return().
 top_proc_sup(IFloor, NFloors, NElevs) ->
     register(top_proc_sup, self()),
     sim_sup:start_link(IFloor, NFloors, NElevs),
     block().
 
+-spec block() -> no_return().
 block() ->
     receive
         stop ->

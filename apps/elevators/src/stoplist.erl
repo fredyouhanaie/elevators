@@ -14,6 +14,8 @@
 %%  Adds a stop at Floor to StopList, given that the last floor passed was
 %%  LastFloor.
 %%----------------------------------------------------------------------
+-spec add(pos_integer(), pos_integer(), maybe_improper_list()) ->
+          nonempty_maybe_improper_list().
 add(Floor, _LastFloor, []) ->
     [Floor];
 add(Floor, _LastFloor, [Floor | Rest]) ->
@@ -29,5 +31,6 @@ add(Floor, LastFloor, [Other | Rest]) ->
 %%  number which can be used to select the best elevator to choose to go to
 %%  a floor.
 %%----------------------------------------------------------------------
+-spec time_to(pos_integer(), pos_integer(), [any()]) -> non_neg_integer().
 time_to(_ToFloor, _FromFloor, StopList) ->
     length(StopList).

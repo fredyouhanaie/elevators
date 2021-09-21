@@ -45,6 +45,7 @@
 %%  a total of NFloors floors. EPids is a list of the elevator control
 %%  process pids.
 %%----------------------------------------------------------------------
+-spec init([number(), ...]) -> {ok, [{pos_integer(), undefined | pid()}]}.
 init([Floor, NFloors, NElevs]) ->
     %% Compute some values needed later on
     CW = NElevs*?EW + 2*?F + (NElevs-1)*?EW, % Canvas width
@@ -93,6 +94,14 @@ init([Floor, NFloors, NElevs]) ->
 %% handle_event handles the sys events and dispatches the interesting ones
 %% to the graphical elevator.
 %%----------------------------------------------------------------------
+-spec handle_event({close, pos_integer()} |
+                   {f_button, pos_integer()} |
+                   {open, pos_integer()} |
+                   {stopping, pos_integer()} |
+                   {approaching | controller_started | e_button | move | passing | stopped_at,
+                    pos_integer(), atom()} |
+                   {reset, pos_integer(), term(), pos_integer()},
+                   maybe_improper_list()) -> {ok, term()}.
 handle_event({open, ENo}, ElevGs) ->
     {value, {_, EG}} = lists:keysearch(ENo, 1, ElevGs),
     e_graphic:open(EG),
@@ -135,12 +144,17 @@ handle_event({e_button, _ENo, _Floor}, ElevGs) ->
 %%----------------------------------------------------------------------
 %% handle_call not used
 %%----------------------------------------------------------------------
+-spec handle_call(term(), term()) -> {ok, ok, term()}.
 handle_call(_Request, State) ->
     {ok, ok, State}.
 
 %%----------------------------------------------------------------------
 %% handle_info takes care of graphic events.
 %%----------------------------------------------------------------------
+-spec handle_info({gs, term(), click,
+                   quit | {floor, pos_integer()} | {elevator, pos_integer(), pos_integer()},
+                   term()}, maybe_improper_list()) ->
+          {ok, term()}.
 handle_info({gs, _Obj, click, {floor, Floor}, _Args}, ElevGs) ->
     scheduler:f_button_pressed(Floor),
     {ok, ElevGs};
@@ -159,12 +173,14 @@ handle_info({gs, _Obj, click, quit, _Args}, ElevGs) ->
 %%----------------------------------------------------------------------
 %% terminate has nothing to clean up.
 %%----------------------------------------------------------------------
+-spec terminate(term(), term()) -> ok.
 terminate(_Reason, _State) ->
     ok.
 
 %%----------------------------------------------------------------------
 %% code_change has no state to convert.
 %%----------------------------------------------------------------------
+-spec code_change(term(), term(), term()) -> {ok, term()}.
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
@@ -184,6 +200,8 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Recursive function for drawing the floors (= lines on the canvas) and
 %%% creating the floor buttons.
 %%%--------------------------------------------------------------------------
+-spec draw_floors(non_neg_integer(), non_neg_integer(), term(), number(), term()) ->
+          [{pos_integer(), non_neg_integer()}].
 draw_floors(0, _, _, _, _) ->
     [];
 draw_floors(F, Ybase, Canvas, CW, FButtonF) ->
@@ -217,6 +235,8 @@ draw_floors(F, Ybase, Canvas, CW, FButtonF) ->
 %%% Recursive function for drawing the elevators (= rectangles on the canvas)
 %%% and creating the elevator buttons.
 %%%--------------------------------------------------------------------------
+-spec draw_elevators(pos_integer(), number(), non_neg_integer(), pos_integer(),
+                     number(), term(), number(), term()) -> [any()].
 draw_elevators(E, NElevs, _, _, _, _, _, _) when E > NElevs ->
     [];
 draw_elevators(E, N, NFloors, Xbase, Y, Canvas, CH, EButtonF) ->
@@ -244,6 +264,8 @@ draw_elevators(E, N, NFloors, Xbase, Y, Canvas, CH, EButtonF) ->
 %%%
 %%% Recursive function for drawing the NFloors buttons for the elevator.
 %%%--------------------------------------------------------------------------
+-spec draw_buttons(pos_integer(), pos_integer(), non_neg_integer(),
+                   float(), non_neg_integer(), term()) -> done.
 draw_buttons(B, _E, NFloors, _X, _Y, _EButtonF) when B > NFloors ->
     done;
 draw_buttons(B, E, NFloors, X, Y, EButtonF) when B rem 2 /=0 ->
@@ -262,6 +284,10 @@ draw_buttons(B, E, NFloors, X, Y, EButtonF) when B rem 2 ==0 ->
     %% Increase Y for next two buttons
     draw_buttons(B+1, E, NFloors, X, Y+?EBH, EButtonF).
 
+-spec start_e_graphics(pos_integer(), number(), [any()],
+                       [{pos_integer(), non_neg_integer()}],
+                       [{pos_integer(), undefined | pid()}]) ->
+          [{pos_integer(), undefined | pid()}].
 start_e_graphics(_N, _Pos, [], _Floors, Result) ->
     lists:reverse(Result);
 start_e_graphics(N, Pos, [EG | ElevGs], Floors, Result) ->

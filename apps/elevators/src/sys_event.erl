@@ -19,11 +19,13 @@
 %%%----------------------------------------------------------------------
 %%% API
 %%%----------------------------------------------------------------------
+-spec start_link([any()]) -> {error, term()} | {ok, pid()}.
 start_link(Handlers) ->
     Ret = gen_event:start_link({local, sys_event}),
     lists:foreach(fun({Name, Arg}) -> add_handler(Name, Arg) end, Handlers),
     Ret.
 
+-spec add_handler(atom(), [term()]) -> any().
 add_handler(Module, Args) ->
     gen_event:add_handler(sys_event, Module, Args).
 
@@ -31,6 +33,7 @@ add_handler(Module, Args) ->
 %% initialized(ENo, State, Floor)
 %%  An elevator has been initialized.
 %%----------------------------------------------------------------------
+-spec initialized(pos_integer(), term(), pos_integer()) -> ok.
 initialized(ENo, State, Floor) ->
     gen_event:notify(sys_event, {reset, ENo, State, Floor}).
 
@@ -38,6 +41,7 @@ initialized(ENo, State, Floor) ->
 %% open(ENo)
 %%  The doors of an elevator have opened.
 %%----------------------------------------------------------------------
+-spec open(pos_integer()) -> ok.
 open(ENo) ->
     gen_event:notify(sys_event, {open, ENo}).
 
@@ -45,6 +49,7 @@ open(ENo) ->
 %% close(ENo)
 %%  The doors of an elevator have closed.
 %%----------------------------------------------------------------------
+-spec close(pos_integer()) -> ok.
 close(ENo) ->
     gen_event:notify(sys_event, {close, ENo}).
 
@@ -55,6 +60,7 @@ close(ENo) ->
 %% Types:
 %%  Dir = up | down
 %%----------------------------------------------------------------------
+-spec move(pos_integer(), up | down) -> ok.
 move(ENo, Dir) ->
     gen_event:notify(sys_event, {move, ENo, Dir}).
 
@@ -62,6 +68,7 @@ move(ENo, Dir) ->
 %% stop(ENo)
 %%  An elevator will stop at the next floor.
 %%----------------------------------------------------------------------
+-spec stopping(pos_integer()) -> ok.
 stopping(ENo) ->
     gen_event:notify(sys_event, {stopping, ENo}).
 
@@ -69,6 +76,7 @@ stopping(ENo) ->
 %% approaching(ENo, Floor)
 %%  An elevator is nearing a floor.
 %%----------------------------------------------------------------------
+-spec approaching(pos_integer(), pos_integer()) -> ok.
 approaching(ENo, Floor) ->
     gen_event:notify(sys_event, {approaching, ENo, Floor}).
 
@@ -76,6 +84,7 @@ approaching(ENo, Floor) ->
 %% stopped_at(ENo, Floor)
 %%  An elevator has stopped at a floor.
 %%----------------------------------------------------------------------
+-spec stopped_at(pos_integer(), pos_integer()) -> ok.
 stopped_at(ENo, Floor) ->
     gen_event:notify(sys_event, {stopped_at, ENo, Floor}).
 
@@ -83,6 +92,7 @@ stopped_at(ENo, Floor) ->
 %% passing(ENo, Floor)
 %%  An elevator is passing a floor.
 %%----------------------------------------------------------------------
+-spec passing(pos_integer(), pos_integer()) -> ok.
 passing(ENo, Floor) ->
     gen_event:notify(sys_event, {passing, ENo, Floor}).
 
@@ -90,6 +100,7 @@ passing(ENo, Floor) ->
 %% e_button_pressed(ENo, Floor)
 %%  A floor button in an elevator has been pressed.
 %%----------------------------------------------------------------------
+-spec e_button_pressed(pos_integer(), pos_integer()) -> ok.
 e_button_pressed(ENo, Floor) ->
     gen_event:notify(sys_event, {e_button, ENo, Floor}).
 
@@ -97,6 +108,7 @@ e_button_pressed(ENo, Floor) ->
 %% f_button_pressed(Floor)
 %%  A call button has been pressed on a floor.
 %%----------------------------------------------------------------------
+-spec f_button_pressed(pos_integer()) -> ok.
 f_button_pressed(Floor) ->
     gen_event:notify(sys_event, {f_button, Floor}).
 
@@ -104,5 +116,6 @@ f_button_pressed(Floor) ->
 %% controller_started(ENo, EPid)
 %%  An elevator control process has been started (or restarted).
 %%----------------------------------------------------------------------
+-spec controller_started(pos_integer(), pid()) -> ok.
 controller_started(ENo, EPid) ->
     gen_event:notify(sys_event, {controller_started, ENo, EPid}).

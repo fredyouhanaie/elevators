@@ -21,6 +21,7 @@
 %%%----------------------------------------------------------------------
 %%% API
 %%%----------------------------------------------------------------------
+-spec start_link(pos_integer()) -> supervisor:startlink_ret().
 start_link(NElevs) ->
     supervisor:start_link({local, elev_sup}, elev_sup, [NElevs]).
 
@@ -31,6 +32,8 @@ start_link(NElevs) ->
 %%----------------------------------------------------------------------
 %% init
 %%----------------------------------------------------------------------
+-spec init([non_neg_integer(), ...]) ->
+          {ok, {supervisor:sup_flags(), [supervisor:child_spec()]}}.
 init([NElevs]) ->
     ChildList = make_child_specs(NElevs),
     SupFlags = {one_for_one, 10, 3600},
@@ -41,6 +44,7 @@ init([NElevs]) ->
 %%  Returns a list of child specifications for NElevs elevator control
 %%  processes.
 %%----------------------------------------------------------------------
+-spec make_child_specs(non_neg_integer()) -> [supervisor:child_spec()].
 make_child_specs(0) -> [];
 make_child_specs(NElevs) ->
     [{NElevs,{elevator,start_link,[NElevs]},permanent,2000,worker,[elevator]}|

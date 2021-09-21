@@ -20,6 +20,7 @@
 %%%----------------------------------------------------------------------
 %%% API
 %%%----------------------------------------------------------------------
+-spec start_link(pos_integer(), [term()]) -> supervisor:startlink_ret().
 start_link(NElevs, EventHandlers) ->
     supervisor:start_link({local, system_sup}, system_sup,
                           [NElevs, EventHandlers]).
@@ -34,6 +35,8 @@ start_link(NElevs, EventHandlers) ->
 %%  EventHandlers is a list of system event handlers that
 %%  should be installed when sys_event starts up.
 %%----------------------------------------------------------------------
+-spec init([any(), ...]) ->
+          {ok, {supervisor:sup_flags(), [supervisor:child_spec()]}}.
 init([NElevs, EventHandlers]) ->
     {ok,{{one_for_one, 2, 3600},
          [{sys_event, {sys_event, start_link, [EventHandlers]},

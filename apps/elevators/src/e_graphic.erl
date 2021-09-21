@@ -80,6 +80,8 @@
 start_link(Pos, ElevG, Floors) ->
     gen_fsm:start_link(e_graphic, [Pos, ElevG, Floors], []).
 -else.
+-spec start_link(pos_integer(), term(), [{pos_integer(), non_neg_integer()}]) ->
+          ignore | {error, term()} | {ok, pid()}.
 start_link(Pos, ElevG, Floors) ->
     gen_statem:start_link(e_graphic, [Pos, ElevG, Floors], []).
 -endif.
@@ -88,6 +90,7 @@ start_link(Pos, ElevG, Floors) ->
 open(Elev) ->
     gen_fsm:send_event(Elev, open).
 -else.
+-spec open(gen_statem:server_ref()) -> ok.
 open(Elev) ->
     gen_statem:cast(Elev, open).
 -endif.
@@ -96,6 +99,7 @@ open(Elev) ->
 close(Elev) ->
     gen_fsm:send_event(Elev, close).
 -else.
+-spec close(gen_statem:server_ref()) -> ok.
 close(Elev) ->
     gen_statem:cast(Elev, close).
 -endif.
@@ -104,6 +108,7 @@ close(Elev) ->
 stop(Elev) ->
     gen_fsm:send_event(Elev, stop).
 -else.
+-spec stop(gen_statem:server_ref()) -> ok.
 stop(Elev) ->
     gen_statem:cast(Elev, stop).
 -endif.
@@ -112,6 +117,7 @@ stop(Elev) ->
 move(Elev, Dir) ->
     gen_fsm:send_event(Elev, {move, Dir}).
 -else.
+-spec move(gen_statem:server_ref(), up | down) -> ok.
 move(Elev, Dir) ->
     gen_statem:cast(Elev, {move, Dir}).
 -endif.
@@ -120,6 +126,7 @@ move(Elev, Dir) ->
 set_controller(Elev, EPid) ->
     gen_fsm:send_all_state_event(Elev, {epid, EPid}).
 -else.
+-spec set_controller(gen_statem:server_ref(), pid()) -> ok.
 set_controller(Elev, EPid) ->
     gen_statem:cast(Elev, {epid, EPid}).
 -endif.
@@ -128,11 +135,13 @@ set_controller(Elev, EPid) ->
 %%% Callback functions from gen_fsm
 %%%----------------------------------------------------------------------
 
+-spec init([any(), ...]) -> {ok, closed, {pos_integer(), term(), nopid, nodir, pos_integer()}}.
 init([Pos, ElevG, Floors]) ->
     {ok, closed, {Pos, ElevG, nopid, nodir, Floors}}.
 
 -ifdef(USE_GEN_FSM).
 -else.
+-spec callback_mode() -> state_functions.
 callback_mode() ->
     state_functions.
 -endif.
@@ -142,6 +151,10 @@ open(close, {Pos, ElevG, EPid, nodir, Floors}) ->
     ?GS:config(ElevG, {fill, black}),
     {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}.
 -else.
+-spec open(cast, term(), term()) ->
+          {keep_state, term()} |
+          {next_state, closed,
+           {pos_integer(), term(), pid(), nodir, pos_integer()}}.
 open(cast, {epid, EPid}, {Pos, ElevG, _OldPid, Dir, Floors}) ->
     elevator:reset(EPid, open, get_floor(Pos, Dir, Floors)),
     {keep_state, {Pos, ElevG, EPid, Dir, Floors}};
@@ -160,6 +173,10 @@ closed({move, Dir}, {Pos, ElevG, EPid, nodir, Floors}) ->
     gen_fsm:send_event(self(), {step, Dir}),
     {next_state, moving, {Pos, ElevG, EPid, Dir, Floors}}.
 -else.
+-spec closed(cast, term(), term()) ->
+          {keep_state, term()} |
+          {next_state, moving | open,
+           {pos_integer(), term(), pid(), atom(), pos_integer()}}.
 closed(cast, {epid, EPid}, {Pos, ElevG, _OldPid, Dir, Floors}) ->
     elevator:reset(EPid, closed, get_floor(Pos, Dir, Floors)),
     {keep_state, {Pos, ElevG, EPid, Dir, Floors}};
@@ -184,6 +201,11 @@ moving({step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
 moving(stop, {Pos, ElevG, EPid, Dir, Floors}) ->
     {next_state, stopping, {Pos, ElevG, EPid, Dir, Floors}}.
 -else.
+-spec moving(cast, term(), term()) ->
+          {keep_state,
+           {pos_integer(), term(), pid(), atom(), pos_integer()}} |
+          {next_state, moving | stopping,
+           {pos_integer(), term(), pid(), atom(), pos_integer()}}.
 moving(cast, {epid, EPid}, {Pos, ElevG, _OldPid, Dir, Floors}) ->
     elevator:reset(EPid, moving, get_floor(Pos, Dir, Floors)),
     {keep_state, {Pos, ElevG, EPid, Dir, Floors}};
@@ -214,6 +236,10 @@ stopping({step, Dir}, {Pos, ElevG, EPid, Dir, Floors}) ->
             {next_state, closed, {Pos, ElevG, EPid, nodir, Floors}}
     end.
 -else.
+-spec stopping(cast, term(), term()) ->
+          {keep_state, term()} |
+          {next_state, closed | stopping,
+           {pos_integer(), term(), pid(), down | nodir | up, maybe_improper_list()}}.
 stopping(cast, {epid, EPid}, {Pos, ElevG, _OldPid, Dir, Floors}) ->
     elevator:reset(EPid, stopping, get_floor(Pos, Dir, Floors)),
     {keep_state, {Pos, ElevG, EPid, Dir, Floors}};
@@ -265,12 +291,14 @@ handle_info(_Info, StateName, StateData) ->
 %%----------------------------------------------------------------------
 %% terminate has nothing to clean up.
 %%----------------------------------------------------------------------
+-spec terminate(term(), term(), term()) -> ok.
 terminate(_Reason, _StateName, _StatData) ->
     ok.
 
 %%----------------------------------------------------------------------
 %% Code change is a no-op (no previous version exists).
 %%----------------------------------------------------------------------
+-spec code_change(term(), term(), term(), term()) -> {ok, term(), term()}.
 code_change(_OldVsn, State, Data, _Extra) ->
     {ok, State, Data}.
 
@@ -285,6 +313,7 @@ code_change(_OldVsn, State, Data, _Extra) ->
 %% Returns the y-offset to move the graphical elevator with when it's
 %% travelling in the direction Dir.
 %%----------------------------------------------------------------------
+-spec dy(down | up) -> -10 | 10.
 dy(up) -> -10;
 dy(down) -> 10.
 
@@ -302,6 +331,8 @@ dy(down) -> 10.
 %% dir is approaching a floor. If so, the elevator control process EPid
 %% is informed.
 %%----------------------------------------------------------------------
+-spec check_position(number(), down | up, pid(), maybe_improper_list()) ->
+          ok.
 check_position(Pos, Dir, EPid, Floors) ->
     case lists:keysearch(Pos + 2 * dy(Dir), 2, Floors) of
         {value, {Floor, _}} ->
@@ -321,6 +352,7 @@ check_position(Pos, Dir, EPid, Floors) ->
 %% Checks whether an elevator at position Pos is at a floor. If so, the
 %% elevator control process EPid is informed.
 %%----------------------------------------------------------------------
+-spec check_arrived(number(), pid(), maybe_improper_list()) -> ok.
 check_arrived(Pos, EPid, Floors) ->
     case at_floor(Pos, Floors) of
         {true, Floor} ->
@@ -338,6 +370,8 @@ check_arrived(Pos, EPid, Floors) ->
 %%
 %% Checks whether an elevator at position Pos is at a floor.
 %%----------------------------------------------------------------------
+-spec at_floor(pos_integer(), maybe_improper_list()) ->
+          false | {true, pos_integer()}.
 at_floor(Pos, Floors) ->
     case lists:keysearch(Pos, 2, Floors) of
         {value, {Floor, _}} ->
@@ -357,6 +391,7 @@ at_floor(Pos, Floors) ->
 %% Retrieves the last floor passed when the graphical elevator is at Pos,
 %% travelling in the direction Dir (or standing still at a floor).
 %%----------------------------------------------------------------------
+-spec get_floor(pos_integer(), down | nodir | up, maybe_improper_list()) -> any().
 get_floor(Pos, nodir, Floors) ->
     {value, {Floor, _}} = lists:keysearch(Pos, 2, Floors),
     Floor;
@@ -365,6 +400,11 @@ get_floor(Pos, up, Floors) ->
 get_floor(Pos, down, Floors) ->
     find(-1, Pos, Floors, infinity, none).
 
+-spec find(-1 | 1,
+           pos_integer(),
+           [{pos_integer(), pos_integer()}],
+           infinity | number(),
+           none | pos_integer()) -> any().
 find(_Sign, _Pos, [], _Min, MinFloor) ->
     MinFloor;
 find(Sign, Pos, [{_F, Y} | Floors], Min, MinF) when Sign * (Y - Pos) < 0 ->

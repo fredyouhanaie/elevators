@@ -20,6 +20,8 @@
 %%%----------------------------------------------------------------------
 %%% API
 %%%----------------------------------------------------------------------
+-spec start_link(pos_integer(), pos_integer(), pos_integer()) ->
+          supervisor:startlink_ret().
 start_link(InitFloor, NFloors, NElevs) ->
     supervisor:start_link({local, sim_sup}, sim_sup,
                           [NElevs, [{display, [InitFloor, NFloors, NElevs]}]]).
@@ -32,6 +34,8 @@ start_link(InitFloor, NFloors, NElevs) ->
 %% init([NElevs, EventHandlers])
 %%  Starts up the graphics supervisor and the system supervisor.
 %%----------------------------------------------------------------------
+-spec init([any(), ...]) ->
+          {ok, {supervisor:sup_flags(), [supervisor:child_spec()]}}.
 init([NElevs, EventHandlers]) ->
     {ok,{{one_for_all, 2, 3600},
          [{g_sup, {g_sup, start_link, []},

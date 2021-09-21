@@ -25,6 +25,7 @@
 
 %%--------------------------------------------------------------------
 
+-spec start() -> reference().
 start() ->
     persistent_term:put(?GS_owner, self()),
     ObjId = erlang:make_ref(),
@@ -33,6 +34,7 @@ start() ->
 
 %%--------------------------------------------------------------------
 
+-spec create(term(), term(), term()) -> reference().
 create(Widget, Window, Props) ->
     ObjId = erlang:make_ref(),
     ?LOG_NOTICE(#{widget => Widget,
@@ -43,6 +45,7 @@ create(Widget, Window, Props) ->
 
 %%--------------------------------------------------------------------
 
+-spec config(term(), term()) -> ok.
 config(Window, Config) ->
     ?LOG_NOTICE(#{window => Window,
                   config => Config}),
@@ -52,6 +55,8 @@ config(Window, Config) ->
 
 %% generate event as if the call button on `Floor' has been pressed
 %%
+-spec fbutton(pos_integer()) ->
+          {gs, dummy_obj_id, click, {floor, pos_integer()}, []}.
 fbutton(Floor) ->
     GS_owner_pid = persistent_term:get(?GS_owner),
     GS_owner_pid ! {gs, dummy_obj_id, click, {floor, Floor}, []}.
@@ -61,6 +66,8 @@ fbutton(Floor) ->
 %% generate event as if the `Floor' button on elevator `Eno' has been
 %% pressed
 %%
+-spec ebutton(pos_integer(), pos_integer()) ->
+          {gs, dummy_obj_id, click, {elevator, pos_integer(), pos_integer()}, []}.
 ebutton(ENo, Floor) ->
     GS_owner_pid = persistent_term:get(?GS_owner),
     GS_owner_pid ! {gs, dummy_obj_id, click, {elevator, ENo, Floor}, []}.
@@ -69,6 +76,7 @@ ebutton(ENo, Floor) ->
 
 %% generate the `Quit' button event
 %%
+-spec qbutton() -> {gs, dummy_obj_id, click, quit, []}.
 qbutton() ->
     GS_owner_pid = persistent_term:get(?GS_owner),
     GS_owner_pid ! {gs, dummy_obj_id, click, quit, []}.
