@@ -6,19 +6,18 @@ Elevator control system demonstrating Erlang/OTP upgrades.
 Recent updates
 --------------
 
-The recent updates includes:
+This is the **classic** branch of the demo repo. It includes all the
+recent updates, and in addition it also includes a copy of the `gs`
+modules from the `OTP-19.3.6.13` release of Erlang/OTP -- the last
+stable release with `gs`.
 
-* The corresponding `gen_statem` calls have been added to replace the
-  deprecated `gen_fsm` behaviour. However, the `gen_fsm` calls have
-  been left in and can be used through conditional compilation.
-* The former `rebar` and `relx` tools have been replaced with `rebar3`
-  and the `rebar3_relx` plugin.
-* The calls to the deprecated `gs` (graphics system) module have been
-  replaced with a mock module (`gs_log`) in order to enable us to
-  check the workings of the rest of the updates. Hopefully, a proper
-  graphic interface will be added in the near future :)
+The sole purpose of providing this branch is so that those wishing to
+modernize the graphics interface have a working version to work
+from. However, there is no guarantee that it will work on all
+platforms!
 
-Further details can be found in the wiki.
+Details about the addition of `gs` source code can be found in
+`apps/gs/README.md`.
 
 History
 -------
@@ -62,25 +61,6 @@ Quick start
 > `./_build/default/rel/elevators/bin/elevators console`
 
  *  Make elevators move and notice they stop at each floor
-    * There is no GUI, so you will need to use `gs_log`, and your
-      imagination, instead :-(
-    * `gs_log:fbutton(F)` generates the event for the call button on
-       floor `F`.
-    * `gs_log:ebutton(E, F)` generates the event for the floor `F`
-      button in elevator `E`.
-    * The type and range of `E` and `F` are not checked. In the real GUI
-      you can only click on buttons with valid values.
-    * Bad `E` will cause crash and restart of the elevator `scheduler`.
-    * Bad `F` will cause an elevator to move indefinitely!
-    * In the log output,
-      * `{move,{0,10}}` indicates elevator moving down
-      * `{move,{0,-10}}` indicates elevator moving up
-      * It takes 8 moves in the same direction to move to the next floor.
-      * `{fill,cyan}` indicates door openning/opened.
-      * `{fill,black}` indicates door closing/closed.
-      * when an elevator arrives at a floor, the door opens, and after
-        one second it closes again.
-
  *  (Exercise: Find bugs, fix them and build a release upgrade)
  *  Place fixes in `upgrade/scheduler.erl`
  *  Run `./v1to2.sh`
@@ -103,6 +83,8 @@ with it.
 * live switch between the two versions with:
   * `./bin/elevators downgrade 1.0`
   * `./bin/elevators upgrade 2.0`
+  * You can do this while the elevators are moving and see the change
+    take effect immediately :)
 
 Troubleshooting
 ---------------
